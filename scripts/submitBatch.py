@@ -27,7 +27,7 @@ def lxbatchSubmitJob (run, path, cfg, outdir, queue, job_dir, dryrun):
     f = open (jobname, 'w')
     f.write ('#!/bin/sh' + '\n\n')
     #f.write ('git clone --recursive '+gitRepo+' \n')
-    f.write('cp -r '+path+' ./ \n')
+    f.write('cp -r '+path+' ./H4Analysis \n')
     #f.write()
     f.write ('cd H4Analysis/ \n')
     f.write ('source scripts/setup.sh \n')
