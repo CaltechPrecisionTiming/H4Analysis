@@ -11,6 +11,11 @@
 #include "interface/WFClassNINO.h"
 #include "interface/WFViewer.h"
 
+#include "TGraphErrors.h"
+#include "TString.h"
+#include "TCanvas.h"
+#include "TString.h"
+
 class T1065Reco: public PluginBase
 {
 public:
@@ -23,7 +28,25 @@ public:
     //---utils---
     bool Begin(CfgManager& opts, uint64* index);
     bool ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plugins, CfgManager& opts);
-    
+
+    double GetAmplificationFactor ( double measuredAmplitude );
+    TGraphErrors* GetTGraph(  float* channel, float* time );
+    TGraphErrors GetTGraph(  short* channel, float* time );
+    int FindMin( int n, short *a);
+    int FindMinAbsolute( int n, short *a);
+    int FindRealMin( int n, short *a);
+    int FindMinFirstPeakAboveNoise( int n, short *a);
+    float GausFit_MeanTime(TGraphErrors* pulse, const float index_first, const float index_last);
+    float GausFit_MeanTime(TGraphErrors* pulse, const float index_first, const float index_last, TString fname);
+    float RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float constantFraction, TString fname, bool makePlot );
+    void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, int event, TString fname, bool makePlot );
+    double GetGaussTime( TGraphErrors* pulse );
+    float GetBaseline(TGraphErrors * pulse, int i_low, int i_high, TString fname );
+    float GetBaseline( int peak, short *a );
+    float GetPulseIntegral(int peak, short *a, std::string option);
+    TGraphErrors* GetTGraphFilter( short* channel, float* time, TString pulseName, bool makePlot );
+
+
 private:    
     //---internal data
     string                      srcInstance_;
