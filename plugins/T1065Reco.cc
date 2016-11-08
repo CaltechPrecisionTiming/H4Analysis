@@ -182,18 +182,24 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	//for T1065Tree
 	int ngroup_t   =  int(outCh/9);
 	int nchannel_t =  outCh%9;
-        int min_iSample = opts.GetOpt<int>(channel+".baselineInt", 0);
-   	int max_iSample = opts.GetOpt<int>(channel+".baselineInt", 1);
+	
 	for(int iSample=0; iSample<1024; iSample++)        
 	{
 		t1065Tree_.b_c[ngroup_t][nchannel_t][iSample] = (short)(WFs_[channel]->GetiSample(iSample));
 		t1065Tree_.raw[outCh][iSample] = (short)(WFs_[channel]->GetiSample(iSample));
 		t1065Tree_.t0[iSample] = iSample;
 	}
-	t1065Tree_.integral[outCh] = WFs_[channel]->GetSignalIntegral(opts.GetOpt<int>(channel+".signalInt", 0),
-                                                                     opts.GetOpt<int>(channel+".signalInt", 1));
-	t1065Tree_.integralFull[outCh] = WFs_[channel]->GetModIntegral(opts.GetOpt<int>(channel+".baselineInt", 1),
-                                                                   WFs_[channel]->GetNSample());
+
+	
+	
+	//t1065Tree_.integral[outCh] = WFs_[channel]->GetSignalIntegral(opts.GetOpt<int>(channel+".signalInt", 0),
+        //                                                             opts.GetOpt<int>(channel+".signalInt", 1));
+	//t1065Tree_.integralFull[outCh] = WFs_[channel]->GetModIntegral(opts.GetOpt<int>(channel+".baselineInt", 1),
+        //                                                           WFs_[channel]->GetNSample());
+	
+	t1065Tree_.amp[outCh] = interpolAmpMax.ampl;
+	t1065Tree_.integral[outCh] = WFs_[channel]->GetSignalIntegral(20,25);
+	t1065Tree_.integralFull[outCh] = WFs_[channel]->GetIntegral(5,1020);
 
         ++outCh;
     }
