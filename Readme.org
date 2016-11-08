@@ -2,7 +2,7 @@
 
 ** set up
 
-=git clone --recursive https://github.com/zhangzc11/H4Analysis.git=
+=git clone --recursive git@github.com:CaltechPrecisionTiming/H4Analysis.git=
 
 =cd H4Analysis=
 
@@ -10,7 +10,7 @@
 
 =make=
 
-(CMSSW not necessacy)
+(CMSSW not necessary)
 
 ** make the template
 
