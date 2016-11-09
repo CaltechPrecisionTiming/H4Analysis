@@ -654,10 +654,13 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	int nchannel_t =  outCh%9;
 	
 	//fill waveform data
+	short raw_neg[1024];
+
 	for(int iSample=0; iSample<1024; iSample++)        
 	{
 		t1065Tree_.b_c[ngroup_t][nchannel_t][iSample] = (short)(WFs_[channel]->GetiSample(iSample));
 		t1065Tree_.raw[outCh][iSample] = (short)(WFs_[channel]->GetiSample(iSample));
+		raw_neg[iSample] = (short)(-1*WFs_[channel]->GetiSample(iSample));
 		t1065Tree_.t0[iSample] = iSample;
 
 	}
@@ -669,7 +672,8 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	}
 
 	//find minimum
-	int index_min = FindMinAbsolute(1024, t1065Tree_.raw[outCh]); // return index of the minc
+	//int index_min = FindMinAbsolute(1024, t1065Tree_.raw[outCh]); // return index of the minc
+	int index_min = FindMinAbsolute(1024, raw_neg); // return index of the minc
 
 	//Make Pulse shape Graph
 	TString pulseName = Form("pulse_event%d_ch%d", eventCount_, outCh);
@@ -709,7 +713,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	
 	// Find Peak Location using the improved algorithm
 	pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t] ) );
-	index_min = FindRealMin (1024, t1065Tree_.raw[outCh]); // return index of the min
+	index_min = FindRealMin (1024, raw_neg); // return index of the min
 	//if ( index_min > 0 ) std::cout << "ch: " << totalIndex << std::endl;
 	t1065Tree_.xmin[outCh] = index_min;
 	
@@ -722,7 +726,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	Double_t tmpAmp = 0.0;
 	Double_t tmpMin = 0.0;
 	pulse->GetPoint(index_min, tmpMin, tmpAmp);
-	t1065Tree_.amp[outCh] = tmpAmp* (1.0 / 4096.0); 
+	t1065Tree_.amp[outCh] = tmpAmp* (-1.0 / 4096.0); 
 
 
 	//Get Pulse Integral
@@ -781,7 +785,6 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	t1065Tree_.linearTime60[outCh] = timecf60;
 
 	delete pulse;
-
 
 	// t1065Tree_.amp[outCh] = interpolAmpMax.ampl;
 	// t1065Tree_.integral[outCh] = WFs_[channel]->GetSignalIntegral(20,25);
