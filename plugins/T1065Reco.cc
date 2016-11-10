@@ -674,6 +674,10 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	//find minimum
 	//int index_min = FindMinAbsolute(1024, t1065Tree_.raw[outCh]); // return index of the minc
 	int index_min = FindMinAbsolute(1024, raw_neg); // return index of the minc
+	if(outCh==14)
+	{
+	index_min = FindMinAbsolute(1024, t1065Tree_.raw[outCh]); // return index of the minc
+	}
 
 	//Make Pulse shape Graph
 	TString pulseName = Form("pulse_event%d_ch%d", eventCount_, outCh);
@@ -714,6 +718,10 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	// Find Peak Location using the improved algorithm
 	pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t] ) );
 	index_min = FindRealMin (1024, raw_neg); // return index of the min
+	if(outCh==14)
+        {
+        index_min = FindRealMin(1024, t1065Tree_.raw[outCh]); // return index of the minc
+        }
 	//if ( index_min > 0 ) std::cout << "ch: " << totalIndex << std::endl;
 	t1065Tree_.xmin[outCh] = index_min;
 	
