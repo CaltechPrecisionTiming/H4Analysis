@@ -81,13 +81,12 @@ int T1065Reco::FindMinAbsolute( int n, short *a) {
   float xmin = a[5];
   int loc = 0;
   for  (int i = 5; i < n-10; i++) {
-    if (xmin > a[i] && a[i+1] < 0.5*a[i] && a[i] < -40. )  
+    //std::cout << i << " " << a[i] << std::endl;
+    if (xmin > a[i])  
       {
-	//std::cout << i << " " << a[i] << std::endl;
+	//std::cout << "lower\n";
 	xmin = a[i];
 	loc = i;
-	//if ( a[i+5]>a[i] && a[i+10]>a[i+5] ) {
-	//break;
       }
   }
   //std::cout << "loc0: " << loc << std::endl;
@@ -543,18 +542,16 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 
     //---setup options
     bool drawDebugPulses = false;
-  
+    bool doTimeRecoFits = true;
+
     //---setup output event 
     int outCh=0;
-    bool fillWFtree=false;
-    if(opts.GetOpt<int>(instanceName_+".fillWFtree"))
-        fillWFtree = *digiTree_.index % opts.GetOpt<int>(instanceName_+".WFtreePrescale") == 0;
 
 
     t1065Tree_.event = eventCount_;
     eventCount_++;
 
-    if (eventCount_ % 1000 == 0) cerr << "Processing Event " << eventCount_ << "\n";
+    if (eventCount_ % 100 == 0) cerr << "Processing Event " << eventCount_ << "\n";
 
     //---load WFs from source instance shared data
     for(auto& channel : channelsNames_)
@@ -572,231 +569,143 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
         {
             ++outCh;
             continue; 
-        }
-        
-        //---subtract a specified channel if requested
-        if(opts.OptExist(channel+".subtractChannel") && WFs_.find(opts.GetOpt<string>(channel+".subtractChannel")) != WFs_.end())
-            *WFs_[channel] -= *WFs_[opts.GetOpt<string>(channel+".subtractChannel")];        
-        WFs_[channel]->SetBaselineWindow(opts.GetOpt<int>(channel+".baselineWin", 0), 
-                                        opts.GetOpt<int>(channel+".baselineWin", 1));
-        WFs_[channel]->SetSignalWindow(opts.GetOpt<int>(channel+".signalWin", 0), 
-                                      opts.GetOpt<int>(channel+".signalWin", 1));
-        WFBaseline baselineInfo = WFs_[channel]->SubtractBaseline();
-        WFFitResults interpolAmpMax = WFs_[channel]->GetInterpolatedAmpMax(-1,-1,opts.GetOpt<int>(channel+".signalWin", 2));
-        digiTree_.b_charge[outCh] = WFs_[channel]->GetIntegral(opts.GetOpt<int>(channel+".baselineInt", 0), 
-                                                             opts.GetOpt<int>(channel+".baselineInt", 1));        
-        digiTree_.b_slope[outCh] = baselineInfo.slope;
-        digiTree_.b_rms[outCh] = baselineInfo.rms;
-        digiTree_.maximum[outCh] = WFs_[channel]->GetAmpMax();
-        digiTree_.time_maximum[outCh] = WFs_[channel]->GetTimeCF(1).first;
-        digiTree_.amp_max[outCh] = interpolAmpMax.ampl;
-        digiTree_.time_max[outCh] = interpolAmpMax.time;
-        digiTree_.chi2_max[outCh] = interpolAmpMax.chi2;
-        digiTree_.charge_tot[outCh] = WFs_[channel]->GetModIntegral(opts.GetOpt<int>(channel+".baselineInt", 1), 
-                                                                   WFs_[channel]->GetNSample());
-        digiTree_.charge_sig[outCh] = WFs_[channel]->GetSignalIntegral(opts.GetOpt<int>(channel+".signalInt", 0), 
-                                                                     opts.GetOpt<int>(channel+".signalInt", 1));
-        //---compute time with all the requested time reconstruction method
-        for(int iT=0; iT<timeRecoTypes_.size(); ++iT)
-        {
-            //---compute time with selected method or store default value (-99)
-            if(timeOpts_.find(channel+"."+timeRecoTypes_[iT]) != timeOpts_.end())
-            {
-                pair<float, float> timeInfo = WFs_[channel]->GetTime(timeRecoTypes_[iT], timeOpts_[channel+"."+timeRecoTypes_[iT]]);
-                digiTree_.time[outCh+iT*channelsNames_.size()] = timeInfo.first;
-                digiTree_.time_chi2[outCh+iT*channelsNames_.size()] = timeInfo.second;
-            }
-            else
-            {
-                digiTree_.time[outCh+iT*channelsNames_.size()] = -99;
-                digiTree_.time_chi2[outCh+iT*channelsNames_.size()] = -99;
-            }
-        }
-        
-        //---template fit (only specified channels)
-        WFFitResults fitResults{-1, -1000, -1};
-       /*
-	 if(opts.OptExist(channel+".templateFit.file"))
-        {
-            WFs_[channel]->SetTemplate(templates_[channel]);
-            fitResults = WFs_[channel]->TemplateFit(opts.GetOpt<float>(channel+".templateFit.fitWin", 0),
-                                                   opts.GetOpt<int>(channel+".templateFit.fitWin", 1),
-                                                   opts.GetOpt<int>(channel+".templateFit.fitWin", 2));
-            digiTree_.fit_ampl[outCh] = fitResults.ampl;
-            digiTree_.fit_time[outCh] = fitResults.time;
-            digiTree_.fit_chi2[outCh] = fitResults.chi2;
-        }
-	*/
-            
-	//---calibration constant for each channel if needed
-	if(opts.OptExist(channel+".calibration.calibrationConst"))
-	  digiTree_.calibration[outCh]=opts.GetOpt<float>(channel+".calibration.calibrationConst");
-	else
-	  digiTree_.calibration[outCh]=1;
+        }                    	
+       
+    	//for T1065Tree
+    	int ngroup_t   =  int(outCh/9);
+    	int nchannel_t =  outCh%9;
 	
-        //---WFs---
-        if(fillWFtree)
-        {
-            auto analizedWF = WFs_[channel]->GetSamples();
-            int nSamples = analizedWF->size();
-            float tUnit = WFs_[channel]->GetTUnit();
-            for(int jSample=0; jSample<analizedWF->size(); ++jSample)
-            {
-                outWFTree_.WF_ch[jSample+outCh*nSamples] = outCh;
-                outWFTree_.WF_time[jSample+outCh*nSamples] = jSample*tUnit;
-                outWFTree_.WF_val[jSample+outCh*nSamples] = analizedWF->at(jSample);
-            }
-        }
-        //---increase output tree channel counter
-        
-	//for T1065Tree
-	int ngroup_t   =  int(outCh/9);
-	int nchannel_t =  outCh%9;
+    	//fill waveform data
+    	short rawInverted[1024];
+
+    	for(int iSample=0; iSample<1024; iSample++) {
+	  //t1065Tree_.b_c[ngroup_t][nchannel_t][iSample] = (short)(WFs_[channel]->GetiSample(iSample));
+	  t1065Tree_.raw[outCh][iSample] = (short)(-1*WFs_[channel]->GetiSample(iSample));
+	  rawInverted[iSample] = (short)(-1*t1065Tree_.raw[outCh][iSample]);
+	  t1065Tree_.t0[iSample] = iSample;	 
+    	}
+
+    	t1065Tree_.time[ngroup_t][0] = 0.0;
+    	for( int i = 1; i < 1024; i++){
+    	  t1065Tree_.time[ngroup_t][i] = float(i) * 0.200;
+    	}
+
+    	//find minimum
+    	int index_min = FindMinAbsolute(1024, t1065Tree_.raw[outCh]); // return index of the minc
+	// if(outCh==14) {
+	//   index_min = FindMinAbsolute(1024, rawInverted[outCh]); // return index of the minc
+	// }
+
+	// cout << "index_min = " << index_min << "\n";
+
+
+    	//Make Pulse shape Graph
+    	TString pulseName = Form("pulse_event%d_ch%d", eventCount_, outCh);
+    	TGraphErrors* pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t] ) );
 	
-	//fill waveform data
-	short raw_neg[1024];
-
-	for(int iSample=0; iSample<1024; iSample++)        
-	{
-		t1065Tree_.b_c[ngroup_t][nchannel_t][iSample] = (short)(WFs_[channel]->GetiSample(iSample));
-		t1065Tree_.raw[outCh][iSample] = (short)(WFs_[channel]->GetiSample(iSample));
-		raw_neg[iSample] = (short)(-1*WFs_[channel]->GetiSample(iSample));
-		t1065Tree_.t0[iSample] = iSample;
-
-	}
-
-
-	t1065Tree_.time[ngroup_t][0] = 0.0;
-	for( int i = 1; i < 1024; i++){
-	  t1065Tree_.time[ngroup_t][i] = float(i);
-	}
-
-	//find minimum
-	//int index_min = FindMinAbsolute(1024, t1065Tree_.raw[outCh]); // return index of the minc
-	int index_min = FindMinAbsolute(1024, raw_neg); // return index of the minc
-	if(outCh==14)
-	{
-	index_min = FindMinAbsolute(1024, t1065Tree_.raw[outCh]); // return index of the minc
-	}
-
-	//Make Pulse shape Graph
-	TString pulseName = Form("pulse_event%d_ch%d", eventCount_, outCh);
-	TGraphErrors* pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t] ) );
-	
-	//our baseline subtraction
-	float baseline;
+    	//our baseline subtraction
+    	float baseline;
         if ( index_min < 105 ) { baseline = GetBaseline( pulse, 850, 1020, pulseName);}
         else { baseline = GetBaseline( pulse, 5 ,150, pulseName);}
         t1065Tree_.base[outCh] = baseline;	
 
-	//Correct pulse shape for baseline offset
-	for(int j = 0; j < 1024; j++) {
-	  t1065Tree_.raw[outCh][j] = (short)((double)(t1065Tree_.raw[outCh][j]) + baseline);
-	}
+    	//Correct pulse shape for baseline offset
+    	for(int j = 0; j < 1024; j++) {
+    	  t1065Tree_.raw[outCh][j] = (short)((double)(t1065Tree_.raw[outCh][j]) + baseline);
+    	}
 
-	// DRS-glitch finder: zero out bins which have large difference
-	// with respect to neighbors in only one or two bins
-	for(int j = 1; j < 1022; j++) {
-	  short a0 = abs(t1065Tree_.raw[outCh][j-1]);
-	  short a1 = abs(t1065Tree_.raw[outCh][j]);
-	  short a2 = abs(t1065Tree_.raw[outCh][j+1]);
-	  short a3 = abs(t1065Tree_.raw[outCh][j+2]);
+    	// DRS-glitch finder: zero out bins which have large difference
+    	// with respect to neighbors in only one or two bins
+    	for(int j = 1; j < 1022; j++) {
+    	  short a0 = abs(t1065Tree_.raw[outCh][j-1]);
+    	  short a1 = abs(t1065Tree_.raw[outCh][j]);
+    	  short a2 = abs(t1065Tree_.raw[outCh][j+1]);
+    	  short a3 = abs(t1065Tree_.raw[outCh][j+2]);
 	  
-	  if ( ( a1>3*a0 && a2>3*a0 && a2>3*a3 && a1>30) )
-	    {
-	      t1065Tree_.raw[outCh][j] = 0;
-	      t1065Tree_.raw[outCh][j+1] = 0;
-	    }
+    	  if ( ( a1>3*a0 && a2>3*a0 && a2>3*a3 && a1>30) )
+    	    {
+    	      t1065Tree_.raw[outCh][j] = 0;
+    	      t1065Tree_.raw[outCh][j+1] = 0;
+    	    }
 	  
-	  if ( ( a1>3*a0 && a1>3*a2 && a1>30) )
-	    t1065Tree_.raw[outCh][j] = 0;
-	}
+    	  if ( ( a1>3*a0 && a1>3*a2 && a1>30) )
+    	    t1065Tree_.raw[outCh][j] = 0;
+    	}
 	
-	delete pulse;
+    	delete pulse;
 
 	
-	// Find Peak Location using the improved algorithm
-	pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t] ) );
-	index_min = FindRealMin (1024, raw_neg); // return index of the min
-	if(outCh==14)
-        {
-        index_min = FindRealMin(1024, t1065Tree_.raw[outCh]); // return index of the minc
-        }
-	//if ( index_min > 0 ) std::cout << "ch: " << totalIndex << std::endl;
+    	// Find Peak Location using the improved algorithm
+    	pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t] ) );
+    	index_min = FindRealMin (1024, t1065Tree_.raw[outCh]); // return index of the min
 	t1065Tree_.xmin[outCh] = index_min;
 	
 	
-	//Apply Filter
-	pulse = GetTGraphFilter( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t], pulseName , false);
+    	//Apply Filter
+    	pulse = GetTGraphFilter( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t], pulseName , false);
 
 	
-	//Compute Amplitude : use units V
-	Double_t tmpAmp = 0.0;
-	Double_t tmpMin = 0.0;
-	pulse->GetPoint(index_min, tmpMin, tmpAmp);
-	t1065Tree_.amp[outCh] = tmpAmp* (-1.0 / 4096.0); 
+    	//Compute Amplitude : use units V
+    	Double_t tmpAmp = 0.0;
+    	Double_t tmpMin = 0.0;
+    	pulse->GetPoint(index_min, tmpMin, tmpAmp);
+    	t1065Tree_.amp[outCh] = tmpAmp* (1.0 / 4096.0); 
+
+    	// Get Pulse Integral
+	t1065Tree_.integral[outCh] = GetPulseIntegral( index_min , t1065Tree_.raw[outCh], "");
+	t1065Tree_.integralFull[outCh] = GetPulseIntegral( index_min , t1065Tree_.raw[outCh], "full");
 
 
-	//Get Pulse Integral
-	// if ( t1065Tree_.xmin[outCh] != 0 ) {
-	  t1065Tree_.integral[outCh] = GetPulseIntegral( index_min , t1065Tree_.raw[outCh], "");
-	  t1065Tree_.integralFull[outCh] = GetPulseIntegral( index_min , t1065Tree_.raw[outCh], "full");
-	// } else {
-	//   t1065Tree_.integral[outCh] = 0.0;
-	//   t1065Tree_.integralFull[outCh] = 0.0;
-	// }
+    	//Gauss Time-Stamping 
+    	Double_t min = 0.; Double_t low_edge =0.; Double_t high_edge =0.; Double_t y = 0.; 
+    	pulse->GetPoint(index_min, min, y);	
+    	pulse->GetPoint(index_min-3, low_edge, y); // get the time of the low edge of the fit range
+    	pulse->GetPoint(index_min+3, high_edge, y);  // get the time of the upper edge of the fit range	
 
-	//Gauss Time-Stamping 
-	Double_t min = 0.; Double_t low_edge =0.; Double_t high_edge =0.; Double_t y = 0.; 
-	pulse->GetPoint(index_min, min, y);	
-	pulse->GetPoint(index_min-3, low_edge, y); // get the time of the low edge of the fit range
-	pulse->GetPoint(index_min+3, high_edge, y);  // get the time of the upper edge of the fit range	
 
-	float timepeak = 0;
-	float timecf0   = 0;
-	float timecf15   = 0;
-	float timecf30   = 0;
-	float timecf45   = 0;
-	float timecf60   = 0;
-	if( drawDebugPulses) {
-	  timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge, pulseName); // get the time stamp
-	  float fs[5];
-	  if ( t1065Tree_.xmin[outCh] != 0.0 ) {
-	    RisingEdgeFitTime( pulse, index_min, fs, eventCount_, "linearFit_" + pulseName, true);
-	  } else {
-	    for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;
-	  }
-	  timecf0  = fs[0];
-	  timecf15 = fs[1];
-	  timecf30 = fs[2];
-	  timecf45 = fs[3];
-	  timecf60 = fs[4];	 
-	} else {
-	  timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge); // get the time stamp
-	  float fs[5];
-	  if ( t1065Tree_.xmin[outCh] != 0.0 ) {
-	    RisingEdgeFitTime( pulse, index_min, fs, eventCount_, "", false);
-	  } else {
-	    for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;
-	  }
-	  timecf0  = fs[0];
-	  timecf15 = fs[1];
-	  timecf30 = fs[2];
-	  timecf45 = fs[3];
-	  timecf60 = fs[4];
-	}
-	t1065Tree_.gauspeak[outCh]   = timepeak;
-	t1065Tree_.linearTime0[outCh] = timecf0;
-	t1065Tree_.linearTime15[outCh] = timecf15;
-	t1065Tree_.linearTime30[outCh] = timecf30;
-	t1065Tree_.linearTime45[outCh] = timecf45;
-	t1065Tree_.linearTime60[outCh] = timecf60;
+    	if (doTimeRecoFits) {
+    	  float timepeak = 0;
+    	  float timecf0   = 0; 
+    	  float timecf15   = 0;
+    	  float timecf30   = 0;
+    	  float timecf45   = 0;
+    	  float timecf60   = 0;
+    	  if( drawDebugPulses) {
+    	    timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge, pulseName); // get the time stamp
+    	    float fs[5];
+    	    if ( t1065Tree_.xmin[outCh] != 0.0 ) {
+    	      RisingEdgeFitTime( pulse, index_min, fs, eventCount_, "linearFit_" + pulseName, true);
+    	    } else {
+    	      for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;
+    	    }
+    	    timecf0  = fs[0];
+    	    timecf15 = fs[1];
+    	    timecf30 = fs[2];
+    	    timecf45 = fs[3];
+    	    timecf60 = fs[4];	 
+    	  } else {
+    	    timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge); // get the time stamp
+    	    float fs[5];
+    	    if ( t1065Tree_.xmin[outCh] != 0.0 ) {
+    	      RisingEdgeFitTime( pulse, index_min, fs, eventCount_, "", false);
+    	    } else {
+    	      for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;
+    	    }
+    	    timecf0  = fs[0];
+    	    timecf15 = fs[1];
+    	    timecf30 = fs[2];
+    	    timecf45 = fs[3];
+    	    timecf60 = fs[4];
+    	  }
+    	  t1065Tree_.gauspeak[outCh]   = timepeak;
+    	  t1065Tree_.linearTime0[outCh] = timecf0;
+    	  t1065Tree_.linearTime15[outCh] = timecf15;
+    	  t1065Tree_.linearTime30[outCh] = timecf30;
+    	  t1065Tree_.linearTime45[outCh] = timecf45;
+    	  t1065Tree_.linearTime60[outCh] = timecf60;
+    	}
 
-	delete pulse;
-
-	// t1065Tree_.amp[outCh] = interpolAmpMax.ampl;
-	// t1065Tree_.integral[outCh] = WFs_[channel]->GetSignalIntegral(20,25);
-	// t1065Tree_.integralFull[outCh] = WFs_[channel]->GetIntegral(5,1020);
+    	delete pulse;
 
         ++outCh;
     }
@@ -805,9 +714,6 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     //---reco var
     digiTree_.Fill();
     t1065Tree_.Fill();
-    //---WFs
-    if(fillWFtree)
-        outWFTree_.Fill();
 
     return true;
 }
