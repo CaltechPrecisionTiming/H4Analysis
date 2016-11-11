@@ -16,7 +16,7 @@ if __name__ == "__main__":
 	if jobs_file_list:
 		for job_file in jobs_file_list:
 			file_size = os.path.getsize(job_file.rstrip())
-			if(file_size < 1000000):
+			if(file_size < 33000000):
 				print "[removing empty file] file size of "+ job_file.rstrip() + ":   "+ str(file_size)	
 				os.system("rm "+job_file.rstrip())
 	os.system("rm tmp_list.list")

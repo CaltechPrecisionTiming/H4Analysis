@@ -33,7 +33,7 @@ def lxbatchSubmitJob (run, path, cfg, outdir, queue, job_dir, dryrun, file_list,
     f.write ('source scripts/setup.sh \n')
     f.write ('make -j 2 \n')
     f.write ('cp '+path+cfg+' job.cfg \n\n')
-    f.write ('cp '+path+'/ntuples/Template*.root ./ntuples/ \n\n')
+    #f.write ('cp '+path+'/ntuples/Template*.root ./ntuples/ \n\n')
     file_list = open (file_list,'r')
     f.write ('mkdir -p /tmp/H4Analysis_tmp/'+run+' \n')
     for file_this in file_list:
