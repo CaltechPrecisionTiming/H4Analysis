@@ -48,7 +48,7 @@ def lxbatchSubmitJob (run, path, cfg, outdir, queue, job_dir, dryrun, file_list,
     f.close ()
     getstatusoutput ('chmod 755 ' + jobname)
     if not dryrun:
-        getstatusoutput ('cd '+job_dir+'; bsub -q ' + queue + ' ' + '-u ' + os.environ['USER'] + '@cern.ch ' + jobname + '; cd -')
+        getstatusoutput ('cd '+job_dir+'; bsub -q ' + queue + ' ' + '-o '+ '/H4Reco_'+queue+'_'+run + '.log -u ' + os.environ['USER'] + '@cern.ch ' + jobname + '; cd -')
 
 # ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
