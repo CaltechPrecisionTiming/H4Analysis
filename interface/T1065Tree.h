@@ -76,6 +76,8 @@ public:
   float linearTime60[36];
   int t[36864];
   int t0[1024];
+  float TDCx;
+  float TDCy;
 
 };
 

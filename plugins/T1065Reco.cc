@@ -704,6 +704,37 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     	  t1065Tree_.linearTime45[outCh] = timecf45;
     	  t1065Tree_.linearTime60[outCh] = timecf60;
     	}
+	
+	//WireChamber reco
+	int chXl_ = opts.GetOpt<int>(instanceName_+".chXleft");
+    	int chXr_ = opts.GetOpt<int>(instanceName_+".chXright");
+    	int chYu_ = opts.GetOpt<int>(instanceName_+".chYup");
+    	int chYd_ = opts.GetOpt<int>(instanceName_+".chYdown");
+
+	vector<float> timeL, timeR, timeU, timeD;
+    	for(int iCh=0; iCh<event.nTdcChannels; ++iCh)
+    	{
+        if(event.tdcChannel[iCh]==chXl_)
+            timeL.push_back(event.tdcData[iCh]);
+        if(event.tdcChannel[iCh]==chXr_)
+            timeR.push_back(event.tdcData[iCh]);
+        if(event.tdcChannel[iCh]==chYu_)
+            timeU.push_back(event.tdcData[iCh]);
+        if(event.tdcChannel[iCh]==chYd_)
+            timeD.push_back(event.tdcData[iCh]);
+    	}
+
+	if(timeR.size()!=0 && timeL.size()!=0)
+        	t1065Tree_.TDCx = (*min_element(timeR.begin(), timeR.begin()+timeR.size()) -
+                          *min_element(timeL.begin(), timeL.begin()+timeL.size()))*0.005;
+    	else
+        	t1065Tree_.TDCx = -1000;
+    	if(timeU.size()!=0 && timeD.size()!=0)
+        	t1065Tree_.TDCy = (*min_element(timeU.begin(), timeU.begin()+timeU.size()) -
+                          *min_element(timeD.begin(), timeD.begin()+timeD.size()))*0.005;
+    	else
+        	t1065Tree_.TDCy = -1000;
+
 
     	delete pulse;
 
