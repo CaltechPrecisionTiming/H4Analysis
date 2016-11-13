@@ -8,20 +8,20 @@ if __name__ == "__main__":
 	
 	pwd = os.getcwd()
 
-	file_path = "~/eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/ntuples_v3/"	
-	job_file_path = "~/eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/ntuples_v3/jobs/ntuples_v3/"	
+	file_path = "~/eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/ntuples_v4/"	
+	job_file_path = "~/eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/ntuples_v4/jobs/ntuples_v4/"	
 
 	os.system("ls "+job_file_path+"* > tmp_list.list")
 	jobs_file_list = open("tmp_list.list","r")
 	if jobs_file_list:
 		for job_file in jobs_file_list:
 			file_size = os.path.getsize(job_file.rstrip())
-			if(file_size < 33000000):
+			if(file_size < 1100000):
 				print "[removing empty file] file size of "+ job_file.rstrip() + ":   "+ str(file_size)	
 				os.system("rm "+job_file.rstrip())
 	os.system("rm tmp_list.list")
 	runs_file = open(run_list_filename, 'r')
         if runs_file:
             for run in runs_file:
-		print "hadd "+file_path+"analysis_"+run.rstrip()+".root "+job_file_path+"analysis_"+run.rstrip()+"_*.root"
-		os.system("hadd "+file_path+"analysis_"+run.rstrip()+".root "+job_file_path+"analysis_"+run.rstrip()+"_*.root")
+		print "hadd -k -f "+file_path+"analysis_"+run.rstrip()+".root "+job_file_path+"analysis_"+run.rstrip()+"_*.root"
+		os.system("hadd -k -f "+file_path+"analysis_"+run.rstrip()+".root "+job_file_path+"analysis_"+run.rstrip()+"_*.root")
