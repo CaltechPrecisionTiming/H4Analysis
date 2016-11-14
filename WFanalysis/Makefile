@@ -9,9 +9,9 @@ LDFLAGS := $(shell root-config --glibs) $(STDLIBDIR) -lRooFit -lRooFitCore -L$(I
 
 CPPFLAGS += -g -std=c++11
 
-TARGET = testapp 
+TARGET = TestBeamPro
 
-SRC = app/testapp.cc src/DrawTimeReso.cc 
+SRC = app/TestBeamPro.cc src/TimeReso.cc 
 
 OBJ = $(SRC:.cc=.o)
 

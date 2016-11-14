@@ -4,7 +4,7 @@
 #include <TFile.h>
 #include <TTree.h>
 //LOCAL INCLUDES
-#include "DrawTimeReso.hh"
+#include "TimeReso.hh"
 #include "digiSettings.hh"
 
 
@@ -19,8 +19,6 @@ int main( int argc, char* argv[])
 	}
 	std::cout<<"using ntuple: "<<inputfile<<std::endl;
 
-	drawWF(inputfile);
-	//drawTimeReso(inputfile);
-	drawNoise(inputfile);
+	//std::cout<<getTimeReso(inputfile, 16, 17)<<std::endl;
 	return 0;
 }
