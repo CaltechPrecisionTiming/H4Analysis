@@ -539,7 +539,7 @@ bool T1065Reco::Begin(CfgManager& opts, uint64* index)
 
 bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plugins, CfgManager& opts)
 {
-
+	
     //---setup options
     bool drawDebugPulses = false;
     bool doTimeRecoFits = true;
@@ -577,12 +577,22 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	
     	//fill waveform data
     	short rawInverted[1024];
-
+	
+	int NSample_t = WFs_[channel]->GetNSample();
     	for(int iSample=0; iSample<1024; iSample++) {
 	  //t1065Tree_.b_c[ngroup_t][nchannel_t][iSample] = (short)(WFs_[channel]->GetiSample(iSample));
+	  if(iSample<NSample_t)
+	  {
 	  t1065Tree_.raw[outCh][iSample] = (short)(-1*WFs_[channel]->GetiSample(iSample));
 	  rawInverted[iSample] = (short)(-1*t1065Tree_.raw[outCh][iSample]);
+	  }
+	  else
+	  {
+		t1065Tree_.raw[outCh][iSample] = 0;
+		rawInverted[iSample] = 0;
+	  }
 	  t1065Tree_.t0[iSample] = iSample;	 
+	
     	}
 
     	t1065Tree_.time[ngroup_t][0] = 0.0;
@@ -706,6 +716,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     	}
 	
 	//WireChamber reco
+	
 	int chXl_ = opts.GetOpt<int>(instanceName_+".chXleft");
     	int chXr_ = opts.GetOpt<int>(instanceName_+".chXright");
     	int chYu_ = opts.GetOpt<int>(instanceName_+".chYup");
@@ -735,6 +746,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     	else
         	t1065Tree_.TDCy = -1000;
 
+	
 
     	delete pulse;
 
