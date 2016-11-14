@@ -712,8 +712,12 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
       t1065Tree_.linearTime60[outCh] = timecf60;
     }
 	
-    //WireChamber reco
-	
+    delete pulse;
+
+    ++outCh;
+  }
+
+     //WireChamber reco
     int chXl_ = opts.GetOpt<int>(instanceName_+".chXleft");
     int chXr_ = opts.GetOpt<int>(instanceName_+".chXright");
     int chYu_ = opts.GetOpt<int>(instanceName_+".chYup");
@@ -743,13 +747,8 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     else
       t1065Tree_.TDCy = -1000;
 
-	
 
-    delete pulse;
 
-    ++outCh;
-  }
- 
   //---fill the output trees 
   //---reco var
   digiTree_.Fill();
