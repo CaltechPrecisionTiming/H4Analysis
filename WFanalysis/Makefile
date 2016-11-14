@@ -11,7 +11,7 @@ CPPFLAGS += -g -std=c++11
 
 TARGET = testapp 
 
-SRC = app/testapp.cc src/DrawTimeReso.cc 
+SRC = app/TestBeamPro.cc src/TimeReso.cc 
 
 OBJ = $(SRC:.cc=.o)
 
