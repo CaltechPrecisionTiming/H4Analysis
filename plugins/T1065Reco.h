@@ -42,7 +42,7 @@ public:
     void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, int event, TString fname, bool makePlot );
     double GetGaussTime( TGraphErrors* pulse );
     float GetBaseline(TGraphErrors * pulse, int i_low, int i_high, TString fname );
-    float GetBaseline( int peak, short *a );
+    float GetBaseline( int peak, short *a , int nbinsExcludedLeftOfPeak , int nbinsExcludedRightOfPeak );
     float GetPulseIntegral(int peak, short *a, std::string option);
     TGraphErrors* GetTGraphFilter( short* channel, float* time, TString pulseName, bool makePlot );
 

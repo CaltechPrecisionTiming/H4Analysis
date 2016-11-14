@@ -146,16 +146,16 @@ int T1065Reco::FindRealMin( int n, short *a) {
 
   //std::cout << "LOC2: " << loc << std::endl;                                                                                                                               
   /*                                                                
-  while ( xmin_init != xmin_new ) {
-    for (int i = 5; i < loc - 50; i++) {
-      if (xmin_new > a[i] && a[i+1] < 0.5*a[i] && a[i] < xmin_init*2/3 )  {
-        xmin_new = a[i];
-        loc = i;
-      }
-    }
-    xmin_init = xmin_new
-    xmin_new = a[5]
-  }
+								    while ( xmin_init != xmin_new ) {
+								    for (int i = 5; i < loc - 50; i++) {
+								    if (xmin_new > a[i] && a[i+1] < 0.5*a[i] && a[i] < xmin_init*2/3 )  {
+								    xmin_new = a[i];
+								    loc = i;
+								    }
+								    }
+								    xmin_init = xmin_new
+								    xmin_new = a[5]
+								    }
   */
   return loc_new;
 }
@@ -168,11 +168,11 @@ int T1065Reco::FindMinFirstPeakAboveNoise( int n, short *a) {
   
   for  (int i = 10; i < n-10; i++) {   
     if ( abs(a[i]) > noise 
-	&& 
-	(a[i] < a[i-1] && a[i] < a[i-2] && a[i] < a[i-3] && a[i] < a[i-4] && a[i] < a[i-5] )
-	&&
-	(a[i] < a[i+1] && a[i] < a[i+2] && a[i] < a[i+3] && a[i] < a[i+4] && a[i] < a[i+5] )
-	)  {
+	 && 
+	 (a[i] < a[i-1] && a[i] < a[i-2] && a[i] < a[i-3] && a[i] < a[i-4] && a[i] < a[i-5] )
+	 &&
+	 (a[i] < a[i+1] && a[i] < a[i+2] && a[i] < a[i+3] && a[i] < a[i+4] && a[i] < a[i+5] )
+	 )  {
       loc = i;
       break;
     }
@@ -182,8 +182,7 @@ int T1065Reco::FindMinFirstPeakAboveNoise( int n, short *a) {
 
 
 // find the mean time from gaus fit
-float T1065Reco::GausFit_MeanTime(TGraphErrors* pulse, const float index_first, const float index_last)
-{
+float T1065Reco::GausFit_MeanTime(TGraphErrors* pulse, const float index_first, const float index_last) {
   TF1* fpeak = new TF1("fpeak","gaus", index_first, index_last);
   pulse->Fit("fpeak","Q","", index_first, index_last);
   
@@ -193,8 +192,7 @@ float T1065Reco::GausFit_MeanTime(TGraphErrors* pulse, const float index_first, 
   return timepeak;
 };
 
-float T1065Reco::GausFit_MeanTime(TGraphErrors* pulse, const float index_first, const float index_last, TString fname)
-{
+float T1065Reco::GausFit_MeanTime(TGraphErrors* pulse, const float index_first, const float index_last, TString fname) {
   TF1* fpeak = new TF1("fpeak","gaus", index_first, index_last);
   //float max = pulse->GetMaximum();
   double max = -9999;
@@ -219,8 +217,7 @@ float T1065Reco::GausFit_MeanTime(TGraphErrors* pulse, const float index_first, 
   return timepeak;
 };
 
-float T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float constantFraction, TString fname, bool makePlot )
-{
+float T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float constantFraction, TString fname, bool makePlot ) {
   double x_low, x_high, y, dummy;
   //pulse->GetPoint(index_min-7, x_low, y);
   //pulse->GetPoint(index_min-2, x_high, y);
@@ -250,8 +247,7 @@ float T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, 
 };
 
 
-void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, int event, TString fname, bool makePlot )
-{
+void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, int event, TString fname, bool makePlot ) {
   double x_low, x_high, y, dummy;
   double ymax;
   pulse->GetPoint(index_min, x_low, ymax);
@@ -285,8 +281,8 @@ void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, f
 
   /*if( max < 10 || index_min < 0 || index_min > 1023 )
     {
-      std::cout << "DEB: skipping event--> " << event << std::endl;
-      return;
+    std::cout << "DEB: skipping event--> " << event << std::endl;
+    return;
     }
   */
   pulse->Fit("flinear","Q","", x_low, x_high );
@@ -315,14 +311,12 @@ void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, f
 };
 
 
-double T1065Reco::GetGaussTime( TGraphErrors* pulse )
-{
+double T1065Reco::GetGaussTime( TGraphErrors* pulse ) {
   return 0;
 };
 
 
-float T1065Reco::GetBaseline(TGraphErrors * pulse, int i_low, int i_high, TString fname )
-{
+float T1065Reco::GetBaseline(TGraphErrors * pulse, int i_low, int i_high, TString fname ) {
   double x_low, x_high, y, dummy;
   pulse->GetPoint(i_low, x_low, y);
   pulse->GetPoint(i_high, x_high, y);
@@ -332,13 +326,13 @@ float T1065Reco::GetBaseline(TGraphErrors * pulse, int i_low, int i_high, TStrin
   pulse->Fit("flinear","RQ","", x_low, x_high );
   
   /* std::cout << "make plot" << std::endl;
-  std::cout << x_low << x_high << fname << std::endl;
-  TCanvas* c = new TCanvas("canvas","canvas",800,400) ;
-  pulse->GetXaxis()->SetLimits(x_low-3, x_high+3);
-  pulse->SetMarkerSize(1);
-  pulse->SetMarkerStyle(20);
-  pulse->Draw("AP");
-  c->SaveAs(fname+"LinearFit.pdf"); */
+     std::cout << x_low << x_high << fname << std::endl;
+     TCanvas* c = new TCanvas("canvas","canvas",800,400) ;
+     pulse->GetXaxis()->SetLimits(x_low-3, x_high+3);
+     pulse->SetMarkerSize(1);
+     pulse->SetMarkerStyle(20);
+     pulse->Draw("AP");
+     c->SaveAs(fname+"LinearFit.pdf"); */
   
   float a = flinear->GetParameter(0);
   delete flinear;
@@ -346,19 +340,25 @@ float T1065Reco::GetBaseline(TGraphErrors * pulse, int i_low, int i_high, TStrin
   return a;
 }
 
-float T1065Reco::GetBaseline( int peak, short *a ) {
+float T1065Reco::GetBaseline( int peak, short *a , int nbinsExcludedLeftOfPeak , int nbinsExcludedRightOfPeak) {
 
   float tmpsum = 0;
   float tmpcount = 0;
   //std::cout << "GGG\n";
+
+  // if (peak + nbinsExcludedRightOfPeak > 950 || peak-nbinsExcludedLeftOfPeak <= 50) {
+    //cout << "Warning: Peak = " << peak << " is too close to left or right boundary \n";
+    //return 0;
+  // }
+
   if (peak < 300) {
-    for  (int i = peak + 200; i < 1000; i++) {
+    for  (int i = peak + nbinsExcludedRightOfPeak; i < 1000; i++) {
       // std::cout << i << " : " << a[i] << "\n";
       tmpsum += a[i];
       tmpcount += 1.0;
     }
   } else {
-    for  (int i = 5; i < peak-200; i++) {
+    for  (int i = 5; i < peak-nbinsExcludedLeftOfPeak; i++) {
       // std::cout << i << " : " << a[i] << "\n";
       tmpsum += a[i];
       tmpcount += 1.0;
@@ -366,30 +366,31 @@ float T1065Reco::GetBaseline( int peak, short *a ) {
   }
   // std::cout << tmpsum / tmpcount << "\n";
 
-  return tmpsum / tmpcount;
+  if (tmpcount == 0) return 0;
+  else return tmpsum / tmpcount;
 }
 
 
-float T1065Reco::GetPulseIntegral(int peak, short *a, std::string option) 
-{
+float T1065Reco::GetPulseIntegral(int peak, short *a, std::string option) {
   float integral = 0.;
 
   if (option == "full") {
-    for (int i=5; i < 1020; i++) {
+    for (int i=5; i < 1010; i++) {
       integral += a[i] * 0.2 * 1e-9 * (1.0/4096.0) * (1.0/50.0) * 1e12; //in units of pC, for 50Ohm termination
+      //cout << "int: " << i << " " << a[i] << " --> " << integral << "\n";
     }
+    //cout << "final int = " << -1.0*integral << "\n";
   }
   else {
     for (int i=peak-20; i < peak+25; i++) {
       integral += a[i] * 0.2 * 1e-9 * (1.0/4096.0) * (1.0/50.0) * 1e12; //in units of pC, for 50Ohm termination
     }
   }
-  return -1.0 * integral;
 
+  return -1.0 * integral;
 }
 
-TGraphErrors* T1065Reco::GetTGraphFilter( short* channel, float* time, TString pulseName, bool makePlot )
-{
+TGraphErrors* T1065Reco::GetTGraphFilter( short* channel, float* time, TString pulseName, bool makePlot ) {
   float Gauss[1024];
   //Setting Errors
   float errorX[1024], errorY[1024], channelFloat[1024];
@@ -466,297 +467,293 @@ TGraphErrors* T1065Reco::GetTGraphFilter( short* channel, float* time, TString p
 
 bool T1065Reco::Begin(CfgManager& opts, uint64* index)
 {
-    //---inputs---
-    if(!opts.OptExist(instanceName_+".srcInstanceName"))
+  //---inputs---
+  if(!opts.OptExist(instanceName_+".srcInstanceName"))
     {
-        cout << ">>> FFTAnalyzer ERROR: no source plugin specified" << endl;
-        return false;
+      cout << ">>> FFTAnalyzer ERROR: no source plugin specified" << endl;
+      return false;
     }
-    srcInstance_ = opts.GetOpt<string>(instanceName_+".srcInstanceName");
-    float nSamples = opts.OptExist(srcInstance_+".nSamples") ?
-        opts.GetOpt<int>(srcInstance_+".nSamples") :
-        opts.GetOpt<int>(instanceName_+".nSamples");
-    channelsNames_ = opts.GetOpt<vector<string> >(instanceName_+".channelsNames");
-    timeRecoTypes_ = opts.GetOpt<vector<string> >(instanceName_+".timeRecoTypes");
+  srcInstance_ = opts.GetOpt<string>(instanceName_+".srcInstanceName");
+  float nSamples = opts.OptExist(srcInstance_+".nSamples") ?
+    opts.GetOpt<int>(srcInstance_+".nSamples") :
+    opts.GetOpt<int>(instanceName_+".nSamples");
+  channelsNames_ = opts.GetOpt<vector<string> >(instanceName_+".channelsNames");
+  timeRecoTypes_ = opts.GetOpt<vector<string> >(instanceName_+".timeRecoTypes");
 
-    //---channels setup
-    string templateTag="prof";
-    if(opts.OptExist(instanceName_+".templateTags"))
-        for(auto& tag : opts.GetOpt<vector<string> >(instanceName_+".templateTags"))
-            for(auto& run : opts.GetOpt<vector<string> >(tag+".runList"))
-                if(run == opts.GetOpt<string>("h4reco.run"))
-                    templateTag = tag;
+  //---channels setup
+  string templateTag="prof";
+  if(opts.OptExist(instanceName_+".templateTags"))
+    for(auto& tag : opts.GetOpt<vector<string> >(instanceName_+".templateTags"))
+      for(auto& run : opts.GetOpt<vector<string> >(tag+".runList"))
+	if(run == opts.GetOpt<string>("h4reco.run"))
+	  templateTag = tag;
 
-    for(auto& channel : channelsNames_)
+  for(auto& channel : channelsNames_)
     {        
-        if(opts.OptExist(channel+".templateFit.file"))
+      if(opts.OptExist(channel+".templateFit.file"))
         {            
-            TFile* templateFile = TFile::Open(opts.GetOpt<string>(channel+".templateFit.file", 0).c_str(), ".READ");
-            TH1* wfTemplate=(TH1*)templateFile->Get((opts.GetOpt<string>(channel+".templateFit.file", 1)+
-                                                     +"_"+templateTag).c_str());
-	    templates_[channel] = (TH1F*) wfTemplate->Clone();
-	    templates_[channel] -> SetDirectory(0);
-            templateFile->Close();
+	  TFile* templateFile = TFile::Open(opts.GetOpt<string>(channel+".templateFit.file", 0).c_str(), ".READ");
+	  TH1* wfTemplate=(TH1*)templateFile->Get((opts.GetOpt<string>(channel+".templateFit.file", 1)+
+						   +"_"+templateTag).c_str());
+	  templates_[channel] = (TH1F*) wfTemplate->Clone();
+	  templates_[channel] -> SetDirectory(0);
+	  templateFile->Close();
         }
-        //---keep track of all the possible time reco method requested
-        for(auto type_name : timeRecoTypes_)
+      //---keep track of all the possible time reco method requested
+      for(auto type_name : timeRecoTypes_)
         {
-            if(opts.OptExist(channel+"."+type_name))
-                timeOpts_[channel+"."+type_name] = opts.GetOpt<vector<float> >(channel+"."+type_name);
+	  if(opts.OptExist(channel+"."+type_name))
+	    timeOpts_[channel+"."+type_name] = opts.GetOpt<vector<float> >(channel+"."+type_name);
         }
     }
     
-    //---outputs---
-    eventCount_ = 0;
-    string digiTreeName = opts.OptExist(instanceName_+".digiTreeName") ?
-        opts.GetOpt<string>(instanceName_+".digiTreeName") : "digi";
-    bool storeTree = opts.OptExist(instanceName_+".storeTree") ?
-        opts.GetOpt<bool>(instanceName_+".storeTree") : true;
-    RegisterSharedData(new TTree(digiTreeName.c_str(), "digi_tree"), "digi_tree", storeTree);
-    digiTree_ = DigiTree(index, (TTree*)data_.back().obj);
-    digiTree_.Init(channelsNames_, timeRecoTypes_);
+  //---outputs---
+  eventCount_ = 0;
+  string digiTreeName = opts.OptExist(instanceName_+".digiTreeName") ?
+    opts.GetOpt<string>(instanceName_+".digiTreeName") : "digi";
+  bool storeTree = opts.OptExist(instanceName_+".storeTree") ?
+    opts.GetOpt<bool>(instanceName_+".storeTree") : true;
+  RegisterSharedData(new TTree(digiTreeName.c_str(), "digi_tree"), "digi_tree", storeTree);
+  digiTree_ = DigiTree(index, (TTree*)data_.back().obj);
+  digiTree_.Init(channelsNames_, timeRecoTypes_);
 
-     string t1065TreeName = opts.OptExist(instanceName_+".t1065TreeName") ?
-        opts.GetOpt<string>(instanceName_+".t1065TreeName") : "t1065";
-    //bool storeTree = opts.OptExist(instanceName_+".storeTree") ?
-    //    opts.GetOpt<bool>(instanceName_+".storeTree") : true;
-    RegisterSharedData(new TTree(t1065TreeName.c_str(), "t1065_tree"), "t1065_tree", storeTree);
-    t1065Tree_ = T1065Tree(index, (TTree*)data_.back().obj);
-    t1065Tree_.Init(channelsNames_, timeRecoTypes_);
+  string t1065TreeName = opts.OptExist(instanceName_+".t1065TreeName") ?
+    opts.GetOpt<string>(instanceName_+".t1065TreeName") : "t1065";
+  //bool storeTree = opts.OptExist(instanceName_+".storeTree") ?
+  //    opts.GetOpt<bool>(instanceName_+".storeTree") : true;
+  RegisterSharedData(new TTree(t1065TreeName.c_str(), "t1065_tree"), "t1065_tree", storeTree);
+  t1065Tree_ = T1065Tree(index, (TTree*)data_.back().obj);
+  t1065Tree_.Init(channelsNames_, timeRecoTypes_);
 
 
-    if(opts.GetOpt<int>(instanceName_+".fillWFtree"))
+  if(opts.GetOpt<int>(instanceName_+".fillWFtree"))
     {
-        string wfTreeName = opts.OptExist(instanceName_+".wfTreeName") ?
-            opts.GetOpt<string>(instanceName_+".wfTreeName") : "wf";
-        RegisterSharedData(new TTree(wfTreeName.c_str(), "wf_tree"), "wf_tree", true);
-        outWFTree_ = WFTree(channelsNames_.size(), nSamples, index, (TTree*)data_.back().obj);
-        outWFTree_.Init();
+      string wfTreeName = opts.OptExist(instanceName_+".wfTreeName") ?
+	opts.GetOpt<string>(instanceName_+".wfTreeName") : "wf";
+      RegisterSharedData(new TTree(wfTreeName.c_str(), "wf_tree"), "wf_tree", true);
+      outWFTree_ = WFTree(channelsNames_.size(), nSamples, index, (TTree*)data_.back().obj);
+      outWFTree_.Init();
     }
 
-    return true;
+  return true;
 }
 
-bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plugins, CfgManager& opts)
-{
+bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plugins, CfgManager& opts) {
 	
-    //---setup options
-    bool drawDebugPulses = false;
-    bool doTimeRecoFits = true;
+  //---setup options
+  bool drawDebugPulses = false;
+  bool doTimeRecoFits = true;
 
-    //---setup output event 
-    int outCh=0;
+  //---setup output event 
+  int outCh=0;
 
 
-    t1065Tree_.event = eventCount_;
-    eventCount_++;
+  t1065Tree_.event = eventCount_;
+  eventCount_++;
 
-    if (eventCount_ % 100 == 0) cerr << "Processing Event " << eventCount_ << "\n";
+  if (eventCount_ % 100 == 0) cerr << "Processing Event " << eventCount_ << "\n";
 
-    //---load WFs from source instance shared data
-    for(auto& channel : channelsNames_)
+  //---load WFs from source instance shared data
+  for(auto& channel : channelsNames_)
     {
-        auto shared_data = plugins[srcInstance_]->GetSharedData(srcInstance_+"_"+channel, "", false);
-        if(shared_data.size() != 0)
-            WFs_[channel] = (WFClass*)shared_data.at(0).obj;
+      auto shared_data = plugins[srcInstance_]->GetSharedData(srcInstance_+"_"+channel, "", false);
+      if(shared_data.size() != 0)
+	WFs_[channel] = (WFClass*)shared_data.at(0).obj;
     }
     
-    //---compute reco variables
-    for(auto& channel : channelsNames_)
-    {
-        //---skip dead channels
-        if(WFs_.find(channel) == WFs_.end())
-        {
-            ++outCh;
-            continue; 
-        }                    	
+  //---compute reco variables
+  for(auto& channel : channelsNames_) {
+
+    //cout << "Channel " << outCh << " : " << channel << "\n";
+    //---skip dead channels
+    if(WFs_.find(channel) == WFs_.end())
+      {
+	++outCh;
+	continue; 
+      }                    	
        
-    	//for T1065Tree
-    	int ngroup_t   =  int(outCh/9);
-    	int nchannel_t =  outCh%9;
+    //for T1065Tree
+    int ngroup_t   =  int(outCh/9);
+    int nchannel_t =  outCh%9;
 	
-    	//fill waveform data
-    	short rawInverted[1024];
+    //fill waveform data
+    short rawInverted[1024];
 	
-	int NSample_t = WFs_[channel]->GetNSample();
-    	for(int iSample=0; iSample<1024; iSample++) {
-	  //t1065Tree_.b_c[ngroup_t][nchannel_t][iSample] = (short)(WFs_[channel]->GetiSample(iSample));
-	  if(iSample<NSample_t)
-	  {
+    int NSample_t = WFs_[channel]->GetNSample();
+    for(int iSample=0; iSample<1024; iSample++) {
+      //t1065Tree_.b_c[ngroup_t][nchannel_t][iSample] = (short)(WFs_[channel]->GetiSample(iSample));
+      if(iSample<NSample_t)
+	{
 	  t1065Tree_.raw[outCh][iSample] = (short)(-1*WFs_[channel]->GetiSample(iSample));
 	  rawInverted[iSample] = (short)(-1*t1065Tree_.raw[outCh][iSample]);
-	  }
-	  else
-	  {
-		t1065Tree_.raw[outCh][iSample] = 0;
-		rawInverted[iSample] = 0;
-	  }
-	  t1065Tree_.t0[iSample] = iSample;	 
+	}
+      else
+	{
+	  t1065Tree_.raw[outCh][iSample] = 0;
+	  rawInverted[iSample] = 0;
+	}
+      t1065Tree_.t0[iSample] = iSample;	 
 	
-    	}
-
-    	t1065Tree_.time[ngroup_t][0] = 0.0;
-    	for( int i = 1; i < 1024; i++){
-    	  t1065Tree_.time[ngroup_t][i] = float(i) * 0.200;
-    	}
-
-    	//find minimum
-    	int index_min = FindMinAbsolute(1024, t1065Tree_.raw[outCh]); // return index of the minc
-	// if(outCh==14) {
-	//   index_min = FindMinAbsolute(1024, rawInverted[outCh]); // return index of the minc
-	// }
-
-	// cout << "index_min = " << index_min << "\n";
-
-
-    	//Make Pulse shape Graph
-    	TString pulseName = Form("pulse_event%d_ch%d", eventCount_, outCh);
-    	TGraphErrors* pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t] ) );
-	
-    	//our baseline subtraction
-    	float baseline;
-        if ( index_min < 105 ) { baseline = GetBaseline( pulse, 850, 1020, pulseName);}
-        else { baseline = GetBaseline( pulse, 5 ,150, pulseName);}
-        t1065Tree_.base[outCh] = baseline;	
-
-    	//Correct pulse shape for baseline offset
-    	for(int j = 0; j < 1024; j++) {
-    	  t1065Tree_.raw[outCh][j] = (short)((double)(t1065Tree_.raw[outCh][j]) + baseline);
-    	}
-
-    	// DRS-glitch finder: zero out bins which have large difference
-    	// with respect to neighbors in only one or two bins
-    	for(int j = 1; j < 1022; j++) {
-    	  short a0 = abs(t1065Tree_.raw[outCh][j-1]);
-    	  short a1 = abs(t1065Tree_.raw[outCh][j]);
-    	  short a2 = abs(t1065Tree_.raw[outCh][j+1]);
-    	  short a3 = abs(t1065Tree_.raw[outCh][j+2]);
-	  
-    	  if ( ( a1>3*a0 && a2>3*a0 && a2>3*a3 && a1>30) )
-    	    {
-    	      t1065Tree_.raw[outCh][j] = 0;
-    	      t1065Tree_.raw[outCh][j+1] = 0;
-    	    }
-	  
-    	  if ( ( a1>3*a0 && a1>3*a2 && a1>30) )
-    	    t1065Tree_.raw[outCh][j] = 0;
-    	}
-	
-    	delete pulse;
-
-	
-    	// Find Peak Location using the improved algorithm
-    	pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t] ) );
-    	index_min = FindRealMin (1024, t1065Tree_.raw[outCh]); // return index of the min
-	t1065Tree_.xmin[outCh] = index_min;
-	
-	
-    	//Apply Filter
-    	pulse = GetTGraphFilter( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t], pulseName , false);
-
-	
-    	//Compute Amplitude : use units V
-    	Double_t tmpAmp = 0.0;
-    	Double_t tmpMin = 0.0;
-    	pulse->GetPoint(index_min, tmpMin, tmpAmp);
-    	t1065Tree_.amp[outCh] = tmpAmp* (1.0 / 4096.0); 
-
-    	// Get Pulse Integral
-	t1065Tree_.integral[outCh] = GetPulseIntegral( index_min , t1065Tree_.raw[outCh], "");
-	t1065Tree_.integralFull[outCh] = GetPulseIntegral( index_min , t1065Tree_.raw[outCh], "full");
-
-
-    	//Gauss Time-Stamping 
-    	Double_t min = 0.; Double_t low_edge =0.; Double_t high_edge =0.; Double_t y = 0.; 
-    	pulse->GetPoint(index_min, min, y);	
-    	pulse->GetPoint(index_min-3, low_edge, y); // get the time of the low edge of the fit range
-    	pulse->GetPoint(index_min+3, high_edge, y);  // get the time of the upper edge of the fit range	
-
-
-    	if (doTimeRecoFits) {
-    	  float timepeak = 0;
-    	  float timecf0   = 0; 
-    	  float timecf15   = 0;
-    	  float timecf30   = 0;
-    	  float timecf45   = 0;
-    	  float timecf60   = 0;
-    	  if( drawDebugPulses) {
-    	    timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge, pulseName); // get the time stamp
-    	    float fs[5];
-    	    if ( t1065Tree_.xmin[outCh] != 0.0 ) {
-    	      RisingEdgeFitTime( pulse, index_min, fs, eventCount_, "linearFit_" + pulseName, true);
-    	    } else {
-    	      for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;
-    	    }
-    	    timecf0  = fs[0];
-    	    timecf15 = fs[1];
-    	    timecf30 = fs[2];
-    	    timecf45 = fs[3];
-    	    timecf60 = fs[4];	 
-    	  } else {
-    	    timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge); // get the time stamp
-    	    float fs[5];
-    	    if ( t1065Tree_.xmin[outCh] != 0.0 ) {
-    	      RisingEdgeFitTime( pulse, index_min, fs, eventCount_, "", false);
-    	    } else {
-    	      for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;
-    	    }
-    	    timecf0  = fs[0];
-    	    timecf15 = fs[1];
-    	    timecf30 = fs[2];
-    	    timecf45 = fs[3];
-    	    timecf60 = fs[4];
-    	  }
-    	  t1065Tree_.gauspeak[outCh]   = timepeak;
-    	  t1065Tree_.linearTime0[outCh] = timecf0;
-    	  t1065Tree_.linearTime15[outCh] = timecf15;
-    	  t1065Tree_.linearTime30[outCh] = timecf30;
-    	  t1065Tree_.linearTime45[outCh] = timecf45;
-    	  t1065Tree_.linearTime60[outCh] = timecf60;
-    	}
-	
-	//WireChamber reco
-	
-	int chXl_ = opts.GetOpt<int>(instanceName_+".chXleft");
-    	int chXr_ = opts.GetOpt<int>(instanceName_+".chXright");
-    	int chYu_ = opts.GetOpt<int>(instanceName_+".chYup");
-    	int chYd_ = opts.GetOpt<int>(instanceName_+".chYdown");
-
-	vector<float> timeL, timeR, timeU, timeD;
-    	for(int iCh=0; iCh<event.nTdcChannels; ++iCh)
-    	{
-        if(event.tdcChannel[iCh]==chXl_)
-            timeL.push_back(event.tdcData[iCh]);
-        if(event.tdcChannel[iCh]==chXr_)
-            timeR.push_back(event.tdcData[iCh]);
-        if(event.tdcChannel[iCh]==chYu_)
-            timeU.push_back(event.tdcData[iCh]);
-        if(event.tdcChannel[iCh]==chYd_)
-            timeD.push_back(event.tdcData[iCh]);
-    	}
-
-	if(timeR.size()!=0 && timeL.size()!=0)
-        	t1065Tree_.TDCx = (*min_element(timeR.begin(), timeR.begin()+timeR.size()) -
-                          *min_element(timeL.begin(), timeL.begin()+timeL.size()))*0.005;
-    	else
-        	t1065Tree_.TDCx = -1000;
-    	if(timeU.size()!=0 && timeD.size()!=0)
-        	t1065Tree_.TDCy = (*min_element(timeU.begin(), timeU.begin()+timeU.size()) -
-                          *min_element(timeD.begin(), timeD.begin()+timeD.size()))*0.005;
-    	else
-        	t1065Tree_.TDCy = -1000;
-
-	
-
-    	delete pulse;
-
-        ++outCh;
     }
- 
-    //---fill the output trees 
-    //---reco var
-    digiTree_.Fill();
-    t1065Tree_.Fill();
 
-    return true;
+    t1065Tree_.time[ngroup_t][0] = 0.0;
+    for( int i = 1; i < 1024; i++){
+      t1065Tree_.time[ngroup_t][i] = float(i) * 0.200;
+    }
+
+    //find minimum
+    int index_min = FindMinAbsolute(1024, t1065Tree_.raw[outCh]); // return index of the minc
+
+
+    //Make Pulse shape Graph
+    TString pulseName = Form("pulse_event%d_ch%d", eventCount_, outCh);
+    TGraphErrors* pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t] ) );
+	
+    //our baseline subtraction
+    float baseline;
+    baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 70);
+    t1065Tree_.base[outCh] = baseline;	
+
+    //Correct pulse shape for baseline offset
+    for(int j = 0; j < 1024; j++) {
+      // cout << "RAW pulse : " << j << " : " << t1065Tree_.raw[outCh][j] << " - " << baseline << " = " 
+      //      << (short)((double)(t1065Tree_.raw[outCh][j]) + baseline) << "\n";
+      t1065Tree_.raw[outCh][j] = (short)((double)(t1065Tree_.raw[outCh][j]) - baseline);
+    }
+
+    // DRS-glitch finder: zero out bins which have large difference
+    // with respect to neighbors in only one or two bins
+    for(int j = 1; j < 1022; j++) {
+      short a0 = abs(t1065Tree_.raw[outCh][j-1]);
+      short a1 = abs(t1065Tree_.raw[outCh][j]);
+      short a2 = abs(t1065Tree_.raw[outCh][j+1]);
+      short a3 = abs(t1065Tree_.raw[outCh][j+2]);
+	  
+      if ( ( a1>3*a0 && a2>3*a0 && a2>3*a3 && a1>30) )
+	{
+	  t1065Tree_.raw[outCh][j] = 0;
+	  t1065Tree_.raw[outCh][j+1] = 0;
+	}
+	  
+      if ( ( a1>3*a0 && a1>3*a2 && a1>30) )
+	t1065Tree_.raw[outCh][j] = 0;
+    }
+	
+    delete pulse;
+
+	
+    // Find Peak Location using the improved algorithm
+    pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t] ) );
+    index_min = FindRealMin (1024, t1065Tree_.raw[outCh]); // return index of the min
+    t1065Tree_.xmin[outCh] = index_min;
+	
+	
+    //Apply Filter
+    pulse = GetTGraphFilter( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t], pulseName , false);
+
+	
+    //Compute Amplitude : use units V
+    Double_t tmpAmp = 0.0;
+    Double_t tmpMin = 0.0;
+    pulse->GetPoint(index_min, tmpMin, tmpAmp);
+    t1065Tree_.amp[outCh] = tmpAmp* (1.0 / 4096.0); 
+
+    // Get Pulse Integral
+    t1065Tree_.integral[outCh] = GetPulseIntegral( index_min , t1065Tree_.raw[outCh], "");
+    t1065Tree_.integralFull[outCh] = GetPulseIntegral( index_min , t1065Tree_.raw[outCh], "full");
+
+
+    //Gauss Time-Stamping 
+    Double_t min = 0.; Double_t low_edge =0.; Double_t high_edge =0.; Double_t y = 0.; 
+    pulse->GetPoint(index_min, min, y);	
+    pulse->GetPoint(index_min-3, low_edge, y); // get the time of the low edge of the fit range
+    pulse->GetPoint(index_min+3, high_edge, y);  // get the time of the upper edge of the fit range	
+
+
+    if (doTimeRecoFits) {
+      float timepeak = 0;
+      float timecf0   = 0; 
+      float timecf15   = 0;
+      float timecf30   = 0;
+      float timecf45   = 0;
+      float timecf60   = 0;
+      if( drawDebugPulses) {
+	timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge, pulseName); // get the time stamp
+	float fs[5];
+	if ( t1065Tree_.xmin[outCh] != 0.0 ) {
+	  RisingEdgeFitTime( pulse, index_min, fs, eventCount_, "linearFit_" + pulseName, true);
+	} else {
+	  for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;
+	}
+	timecf0  = fs[0];
+	timecf15 = fs[1];
+	timecf30 = fs[2];
+	timecf45 = fs[3];
+	timecf60 = fs[4];	 
+      } else {
+	timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge); // get the time stamp
+	float fs[5];
+	if ( t1065Tree_.xmin[outCh] != 0.0 ) {
+	  RisingEdgeFitTime( pulse, index_min, fs, eventCount_, "", false);
+	} else {
+	  for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;
+	}
+	timecf0  = fs[0];
+	timecf15 = fs[1];
+	timecf30 = fs[2];
+	timecf45 = fs[3];
+	timecf60 = fs[4];
+      }
+      t1065Tree_.gauspeak[outCh]   = timepeak;
+      t1065Tree_.linearTime0[outCh] = timecf0;
+      t1065Tree_.linearTime15[outCh] = timecf15;
+      t1065Tree_.linearTime30[outCh] = timecf30;
+      t1065Tree_.linearTime45[outCh] = timecf45;
+      t1065Tree_.linearTime60[outCh] = timecf60;
+    }
+	
+    //WireChamber reco
+	
+    int chXl_ = opts.GetOpt<int>(instanceName_+".chXleft");
+    int chXr_ = opts.GetOpt<int>(instanceName_+".chXright");
+    int chYu_ = opts.GetOpt<int>(instanceName_+".chYup");
+    int chYd_ = opts.GetOpt<int>(instanceName_+".chYdown");
+
+    vector<float> timeL, timeR, timeU, timeD;
+    for(int iCh=0; iCh<event.nTdcChannels; ++iCh)
+      {
+        if(event.tdcChannel[iCh]==chXl_)
+	  timeL.push_back(event.tdcData[iCh]);
+        if(event.tdcChannel[iCh]==chXr_)
+	  timeR.push_back(event.tdcData[iCh]);
+        if(event.tdcChannel[iCh]==chYu_)
+	  timeU.push_back(event.tdcData[iCh]);
+        if(event.tdcChannel[iCh]==chYd_)
+	  timeD.push_back(event.tdcData[iCh]);
+      }
+
+    if(timeR.size()!=0 && timeL.size()!=0)
+      t1065Tree_.TDCx = (*min_element(timeR.begin(), timeR.begin()+timeR.size()) -
+			 *min_element(timeL.begin(), timeL.begin()+timeL.size()))*0.005;
+    else
+      t1065Tree_.TDCx = -1000;
+    if(timeU.size()!=0 && timeD.size()!=0)
+      t1065Tree_.TDCy = (*min_element(timeU.begin(), timeU.begin()+timeU.size()) -
+			 *min_element(timeD.begin(), timeD.begin()+timeD.size()))*0.005;
+    else
+      t1065Tree_.TDCy = -1000;
+
+	
+
+    delete pulse;
+
+    ++outCh;
+  }
+ 
+  //---fill the output trees 
+  //---reco var
+  digiTree_.Fill();
+  t1065Tree_.Fill();
+
+  return true;
 }
