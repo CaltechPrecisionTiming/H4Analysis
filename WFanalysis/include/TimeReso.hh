@@ -1,5 +1,5 @@
-#ifndef RunTwoFitMgg_HH
-#define RunTwoFitMgg_HH
+#ifndef TimeReso_HH
+#define TimeReso_HH
 //C++ INCLUDES
 #include <sstream>
 #include <string>
@@ -14,8 +14,6 @@
 //LOCAL INCLUDES
 //
 
-void drawWF(std::string fname);
-void drawTimeReso(std::string fname);
-void drawNoise(std::string fname);
+double getTimeReso(std::string fname, int ch_ref, int ch_get);
 
 #endif
