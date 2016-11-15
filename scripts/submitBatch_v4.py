@@ -87,7 +87,7 @@ if __name__ == '__main__':
     parser.add_argument('--dryrun' , action="store_true", default=False, help='do not submit the jobs, just create them')
     parser.add_argument('--batch' , default='lxbatch', help='batch system to use')
     parser.add_argument('--nf' , default="2", help='number of files per job')
-    parser.add_argument('--inputDir' , default="/eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/raw/", help='input directory')
+    parser.add_argument('--inputDir' , default="/eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/DataTree/", help='input directory')
    
     
     args = parser.parse_args ()
