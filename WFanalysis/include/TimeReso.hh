@@ -14,6 +14,6 @@
 //LOCAL INCLUDES
 //
 
-double getTimeReso(std::string fname, int ch_ref, int ch_get);
+double getTimeReso(std::string fname, TString cut, int ch_ref, int ch_get);
 
 #endif

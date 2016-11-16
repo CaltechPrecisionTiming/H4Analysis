@@ -1,6 +1,7 @@
 //C++ INCLUDES
 #include <vector>
 #include <fstream>
+#include <string>
 //ROOT INCLUDES
 //#include <TSYSTEM.h>
 #include <TSystem.h>
@@ -48,14 +49,25 @@
 #include "digiSettings.hh"
 
 
-double getTimeReso(std::string fname, int ch_ref, int ch_get)
+double getTimeReso(std::string fname, TString cut, int ch_ref, int ch_get)
 {
 	double time_reso = 0.0;
-
 	TFile* f = new TFile(fname.c_str() , "READ" );
-	TTree* tree =  (TTree*)f->Get("t1065");
+        TTree* tree = (TTree*)f->Get("t1065");
+
 	TCanvas *cv = new TCanvas("cv","cv",800,600);
 	
+	TH1F *h_dT = new TH1F("deltaTime","deltaTime",100,-3,3);
+
+//	string s_ref = to_string(ch_ref);
+//	string s_get = to_string(ch_get);
+
+	//string s_draw = "gauspeak["+(to_string(ch_ref)).c_str()+"] - gauspeak["+(to_string(ch_get)).c_str()+"]>>deltaTime";
+	std::string s_draw = "gauspeak["+std::to_string(ch_ref)+"] - gauspeak["+std::to_string(ch_get)+"]>>deltaTime";
+
+	tree->Draw(s_draw.c_str(),cut);
+	
+	time_reso = h_dT->GetStdDev();		
 	return time_reso;	
 };
 
