@@ -100,6 +100,7 @@ int T1065Reco::FindRealMin( int n, short *a) {
   
   float noise = 0;
   
+  //find noise level from first 100 bins
   for ( int i = 5; i < 100; i++)
     {
       if( abs(a[i]) > noise ) 
@@ -108,6 +109,7 @@ int T1065Reco::FindRealMin( int n, short *a) {
 	}
     }
 
+  
   for  (int i = 5; i < n-10; i++) {
     if (xmin > a[i] && a[i+1] < 0.5*a[i] && a[i] < -3*noise && a[i] < -50.)  
       {
@@ -344,31 +346,29 @@ float T1065Reco::GetBaseline( int peak, short *a , int nbinsExcludedLeftOfPeak ,
 
   float tmpsum = 0;
   float tmpcount = 0;
-  //std::cout << "GGG\n";
-
+  // std::cout << "GGG\n";
+  // cout << peak << "\n";
   // if (peak + nbinsExcludedRightOfPeak > 950 || peak-nbinsExcludedLeftOfPeak <= 50) {
     //cout << "Warning: Peak = " << peak << " is too close to left or right boundary \n";
     //return 0;
   // }
 
-  if (peak < 300) {
-    if (peak+nbinsExcludedRightOfPeak < 1024) {
-      for  (int i = peak + nbinsExcludedRightOfPeak; i < 1000; i++) {
-	// std::cout << i << " : " << a[i] << "\n";
-	tmpsum += a[i];
-	tmpcount += 1.0;
-      }
-    }
-  } else {
-    if (peak-nbinsExcludedLeftOfPeak >= 0) {
-      for  (int i = 5; i < peak-nbinsExcludedLeftOfPeak; i++) {
-	// std::cout << i << " : " << a[i] << "\n";
-	tmpsum += a[i];
-	tmpcount += 1.0;
-      }
+  if (peak+nbinsExcludedRightOfPeak < 1024) {
+    for  (int i = peak + nbinsExcludedRightOfPeak; i < 1000; i++) {
+      //std::cout << i << " : " << a[i] << "\n";
+      tmpsum += a[i];
+      tmpcount += 1.0;
     }
   }
-  // std::cout << tmpsum / tmpcount << "\n";
+  if (peak-nbinsExcludedLeftOfPeak >= 0) {
+    for  (int i = 5; i < peak-nbinsExcludedLeftOfPeak; i++) {
+      //std::cout << i << " : " << a[i] << "\n";
+      tmpsum += a[i];
+      tmpcount += 1.0;
+    }
+  }
+
+  //std::cout << tmpsum / tmpcount << "\n";
 
   if (tmpcount == 0) return 0;
   else return tmpsum / tmpcount;
@@ -551,11 +551,11 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
   //---setup output event 
   int outCh=0;
 
-
   t1065Tree_.event = eventCount_;
   eventCount_++;
-
   if (eventCount_ % 100 == 0) cerr << "Processing Event " << eventCount_ << "\n";
+
+  //if (t1065Tree_.event != 39) return true;
 
   //---load WFs from source instance shared data
   for(auto& channel : channelsNames_)
@@ -618,6 +618,14 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     if (channel == "CdTe") {
       //For Cadmium Sensor signal, use left of pulse to determine the baseline
       baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 1024);
+      //if baseline is 0, then the peak occurs too far near the left edge and the pulse is likely pure noise
+      //in that case, use the nominal range to determine baseline
+      if (baseline == 0) baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 70);
+    } else if (channel == "SCINT" || channel == "CH3") {
+      baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 1024);
+      if (baseline == 0) baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 70);
+    } else if (channel == "LYSO") {
+      baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 150);
     } else {
       baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 70);
     }
@@ -626,7 +634,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     //Correct pulse shape for baseline offset
     for(int j = 0; j < 1024; j++) {
       // cout << "RAW pulse : " << j << " : " << t1065Tree_.raw[outCh][j] << " - " << baseline << " = " 
-      //      << (short)((double)(t1065Tree_.raw[outCh][j]) + baseline) << "\n";
+      // 	   << (short)((double)(t1065Tree_.raw[outCh][j]) + baseline) << "\n";
       t1065Tree_.raw[outCh][j] = (short)((double)(t1065Tree_.raw[outCh][j]) - baseline);
     }
 
@@ -653,7 +661,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	
     // Find Peak Location using the improved algorithm
     pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t] ) );
-    index_min = FindRealMin (1024, t1065Tree_.raw[outCh]); // return index of the min
+    //index_min = FindRealMin (1024, t1065Tree_.raw[outCh]); // return index of the min
     t1065Tree_.xmin[outCh] = index_min;
 	
 	
@@ -664,8 +672,13 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     //Compute Amplitude : use units V
     Double_t tmpAmp = 0.0;
     Double_t tmpMin = 0.0;
-    pulse->GetPoint(index_min, tmpMin, tmpAmp);
-    t1065Tree_.amp[outCh] = tmpAmp* (1.0 / 4096.0); 
+    if (index_min > 0) {
+      pulse->GetPoint(index_min, tmpMin, tmpAmp);
+      //cout << "amp: " << tmpAmp << " " << t1065Tree_.raw[outCh][index_min] << "\n";
+      t1065Tree_.amp[outCh] = tmpAmp * (1.0 / 4096.0); 
+    } else {
+      t1065Tree_.amp[outCh] = 0;
+    }
 
     // Get Pulse Integral
     t1065Tree_.integral[outCh] = GetPulseIntegral( index_min , t1065Tree_.raw[outCh], "");
