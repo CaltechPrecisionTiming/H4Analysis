@@ -352,16 +352,20 @@ float T1065Reco::GetBaseline( int peak, short *a , int nbinsExcludedLeftOfPeak ,
   // }
 
   if (peak < 300) {
-    for  (int i = peak + nbinsExcludedRightOfPeak; i < 1000; i++) {
-      // std::cout << i << " : " << a[i] << "\n";
-      tmpsum += a[i];
-      tmpcount += 1.0;
+    if (peak+nbinsExcludedRightOfPeak < 1024) {
+      for  (int i = peak + nbinsExcludedRightOfPeak; i < 1000; i++) {
+	// std::cout << i << " : " << a[i] << "\n";
+	tmpsum += a[i];
+	tmpcount += 1.0;
+      }
     }
   } else {
-    for  (int i = 5; i < peak-nbinsExcludedLeftOfPeak; i++) {
-      // std::cout << i << " : " << a[i] << "\n";
-      tmpsum += a[i];
-      tmpcount += 1.0;
+    if (peak-nbinsExcludedLeftOfPeak >= 0) {
+      for  (int i = 5; i < peak-nbinsExcludedLeftOfPeak; i++) {
+	// std::cout << i << " : " << a[i] << "\n";
+	tmpsum += a[i];
+	tmpcount += 1.0;
+      }
     }
   }
   // std::cout << tmpsum / tmpcount << "\n";
@@ -611,7 +615,12 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	
     //our baseline subtraction
     float baseline;
-    baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 70);
+    if (channel == "CdTe") {
+      //For Cadmium Sensor signal, use left of pulse to determine the baseline
+      baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 1024);
+    } else {
+      baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 70);
+    }
     t1065Tree_.base[outCh] = baseline;	
 
     //Correct pulse shape for baseline offset
