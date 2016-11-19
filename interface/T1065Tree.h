@@ -68,6 +68,7 @@ public:
   float amp[36];
   float integral[36];
   float integralFull[36];
+  float risetime[36];
   float gauspeak[36];
   float linearTime0[36];
   float linearTime15[36];

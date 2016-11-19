@@ -249,7 +249,7 @@ float T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, 
 };
 
 
-void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, int event, TString fname, bool makePlot ) {
+void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, float &risetime, int event, TString fname, bool makePlot ) {
   double x_low, x_high, y, dummy;
   double ymax;
   pulse->GetPoint(index_min, x_low, ymax);
@@ -308,7 +308,10 @@ void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, f
   tstamp[2] = (0.30*y-b)/slope;
   tstamp[3] = (0.45*y-b)/slope;
   tstamp[4] = (0.60*y-b)/slope;
-  
+  if (slope != 0) {
+    risetime = (0.90*y-b)/slope - (0.10*y-b)/slope;
+  }
+ 
   delete flinear;
 };
 
@@ -621,6 +624,8 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
       //if baseline is 0, then the peak occurs too far near the left edge and the pulse is likely pure noise
       //in that case, use the nominal range to determine baseline
       if (baseline == 0) baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 70);
+    } else if (channel == "CdTeNoise") {
+      baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 0,0);    
     } else if (channel == "SCINT" || channel == "CH3") {
       baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 1024);
       if (baseline == 0) baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 70);
@@ -693,6 +698,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 
 
     if (doTimeRecoFits) {
+      float risetime = 0;
       float timepeak = 0;
       float timecf0   = 0; 
       float timecf15   = 0;
@@ -703,7 +709,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge, pulseName); // get the time stamp
 	float fs[5];
 	if ( t1065Tree_.xmin[outCh] != 0.0 ) {
-	  RisingEdgeFitTime( pulse, index_min, fs, eventCount_, "linearFit_" + pulseName, true);
+	  RisingEdgeFitTime( pulse, index_min, fs, risetime, eventCount_, "linearFit_" + pulseName, true);
 	} else {
 	  for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;
 	}
@@ -716,7 +722,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge); // get the time stamp
 	float fs[5];
 	if ( t1065Tree_.xmin[outCh] != 0.0 ) {
-	  RisingEdgeFitTime( pulse, index_min, fs, eventCount_, "", false);
+	  RisingEdgeFitTime( pulse, index_min, fs, risetime, eventCount_, "", false);
 	} else {
 	  for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;
 	}
@@ -732,7 +738,8 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
       t1065Tree_.linearTime30[outCh] = timecf30;
       t1065Tree_.linearTime45[outCh] = timecf45;
       t1065Tree_.linearTime60[outCh] = timecf60;
-    }
+      t1065Tree_.risetime[outCh]   = risetime;
+  }
 	
     delete pulse;
 

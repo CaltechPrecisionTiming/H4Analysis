@@ -80,6 +80,7 @@ void T1065Tree::Init(vector<string>& names, vector<string>& timetypes)
   tree_->Branch("base", base, "base[36]/F");
   tree_->Branch("int", integral, "int[36]/F");
   tree_->Branch("intfull", integralFull, "intfull[36]/F");
+  tree_->Branch("risetime", risetime, "risetime[36]/F");
   tree_->Branch("gauspeak", gauspeak, "gauspeak[36]/F");
   tree_->Branch("linearTime0", linearTime0, "linearTime0[36]/F");
   tree_->Branch("linearTime15", linearTime15, "linearTime15[36]/F");
