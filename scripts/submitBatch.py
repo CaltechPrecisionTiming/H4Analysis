@@ -19,7 +19,7 @@ def get_comma_separated_args(self, arg_line):
 
 # ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-def lxbatchSubmitJob (run, path, cfg, outdir, queue, job_dir, dryrun):
+def lxbatchSubmitJob (run, path, cfg, outdir, queue, job_dir, dryrun, file_list, file_path):
     jobname = job_dir+'/H4Reco_'+queue+'_'+run+'.sh'
     #gitRepo = getoutput('git remote -v | grep origin | grep fetch | awk \'{print $2}\'')
     #pwd = os.getcwd()
@@ -33,17 +33,22 @@ def lxbatchSubmitJob (run, path, cfg, outdir, queue, job_dir, dryrun):
     f.write ('source scripts/setup.sh \n')
     f.write ('make -j 2 \n')
     f.write ('cp '+path+cfg+' job.cfg \n\n')
-    f.write ('cp '+path+'/ntuples/Template*.root ./ntuples/ \n\n')
+    #f.write ('cp '+path+'/ntuples/Template*.root ./ntuples/ \n\n')
+    file_list = open (file_list,'r')
+    f.write ('mkdir -p /tmp/H4Analysis_tmp/'+run+' \n')
+    for file_this in file_list:
+    	f.write ('/afs/cern.ch/project/eos/installation/0.3.84-aquamarine/bin/eos.select cp root://eoscms/'+file_path+file_this.rstrip()+" /tmp/H4Analysis_tmp/"+run+"/"+file_this.rstrip()+' \n')
     f.write ('bin/H4Reco job.cfg '+run+'\n\n')
     f.write ('cd ntuples \n')
     if "/eos/cms/" in outdir:
         f.write ('for file in *'+run+'.root; do /afs/cern.ch/project/eos/installation/0.3.84-aquamarine/bin/eos.select cp $file '+outdir+'/$file; done\n')
     else:
         f.write ('cp *'+run+'.root '+outdir+'\n')
+    f.write('rm -rf /tmp/H4Analysis_tmp/'+run+'\n')
     f.close ()
     getstatusoutput ('chmod 755 ' + jobname)
     if not dryrun:
-        getstatusoutput ('cd '+job_dir+'; bsub -q ' + queue + ' ' + '-u ' + os.environ['USER'] + '@cern.ch ' + jobname + '; cd -')
+        getstatusoutput ('cd '+job_dir+'; bsub -q ' + queue + ' ' + '-o '+ '/H4Reco_'+queue+'_'+run + '.log -u ' + os.environ['USER'] + '@cern.ch ' + jobname + '; cd -')
 
 # ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -81,6 +86,9 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--cfg' , default = '../cfg/H4DAQ_base.cfg', help='production version')
     parser.add_argument('--dryrun' , action="store_true", default=False, help='do not submit the jobs, just create them')
     parser.add_argument('--batch' , default='lxbatch', help='batch system to use')
+    parser.add_argument('--nf' , default="2", help='number of files per job')
+    parser.add_argument('--inputDir' , default="/eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/DataTree/", help='input directory')
+   
     
     args = parser.parse_args ()
 
@@ -105,19 +113,37 @@ if __name__ == '__main__':
 
     if args.cfg.startswith('../'):
         args.cfg = args.cfg[len('../'):]
-    
+   
     if len(args.runs) == 1 and os.path.isfile(args.runs[0]):
         runs_file = open(args.runs[0], 'r')
         args.runs  = []
         if runs_file:
             for run in runs_file:
                 args.runs.append(run.rstrip())
-
+		os.system("eos ls "+args.inputDir+"/"+run.rstrip()+" > "+job_dir+"/files_run_"+run.rstrip()+".list")
+		file_list = open (job_dir+"/files_run_"+run.rstrip()+".list", 'r')
+		nfile_this = 0
+		njob_this = 0
+		if file_list:
+			for file_this in file_list:
+				njob_this =  int(nfile_this/int(args.nf))
+				file_list_thisjob = open (job_dir+"/"+run.rstrip()+"_"+str(njob_this)+".list", 'a')
+				#file_list_thisjob.write(args.inputDir+"/"+run.rstrip()+"/"+file_this)
+				file_list_thisjob.write(file_this)
+				nfile_this = nfile_this + 1
+	
+            	for ijob in range(0, njob_this+1):
+			if args.batch == 'lxbatch':
+				print 'submitting run: ', run, "  subjob ", str(ijob)
+				lxbatchSubmitJob(run.rstrip()+"_"+str(ijob), local_path, args.cfg, stageOutDir, args.queue, job_dir, args.dryrun, job_dir+"/"+run.rstrip()+"_"+str(ijob)+".list", args.inputDir+"/"+run.rstrip()+"/")
+			
+	    
     ## create jobs
-    print 'submitting jobs to queue', args.queue
-    for run in args.runs:
-        print 'submitting run: ', run
-        if args.batch == 'lxbatch':
-            lxbatchSubmitJob(run, local_path, args.cfg, stageOutDir, args.queue, job_dir, args.dryrun) 
-        if args.batch == 'hercules':
-            herculesSubmitJob(run, local_path, args.cfg, stageOutDir, args.queue, job_dir, args.dryrun) 
+    
+    #print 'submitting jobs to queue', args.queue
+    #for run in args.runs:
+    #    print 'submitting run: ', run
+    #    if args.batch == 'lxbatch':
+    #        lxbatchSubmitJob(run, local_path, args.cfg, stageOutDir, args.queue, job_dir, args.dryrun) 
+    #    if args.batch == 'hercules':
+    #        herculesSubmitJob(run, local_path, args.cfg, stageOutDir, args.queue, job_dir, args.dryrun) 
