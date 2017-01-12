@@ -25,9 +25,9 @@ you might need to edit the cfg file properly such as the path2data (the input fi
 
 ** submit batch jobs to run a list of input files
 
-  = cd scripts =
+= cd scripts =
 
-  = python submitBatch.py -r=list_HGC_Nov.list -s=root://eoscms//eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/ntuples_v7/jobs/ -v=v7_Jan10 -c=../cfg/H4_t1065_test_batch.cfg -q=1nd --nf=1  =
+= python submitBatch.py -r=list_HGC_Nov.list -s=root://eoscms//eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/ntuples_v7/jobs/ -v=v7_Jan10 -c=../cfg/H4_t1065_test_batch.cfg -q=1nd --nf=1  =
 
 where:
 
@@ -44,7 +44,7 @@ You can also add a parameter “--inputDir=” for the directory of the input fi
 
 *************************************************************
 
-* H4Analysis
+* Some Notes:
   - This repository aims to provide a fast reconstruction of data
     acquired with the H4DAQ mainly with the CAEN V1742 Digitizer
   - The main program is the H4Reco ntuples producer which can be easily
