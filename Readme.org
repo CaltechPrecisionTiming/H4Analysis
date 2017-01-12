@@ -24,14 +24,21 @@ where 5166 is the run number and cfg/H4_t1065_test.cfg is the cfg file you use.
 you might need to edit the cfg file properly such as the path2data (the input file directory)
 
 **submit batch jobs to run a list of input files:
+
   = cd scripts =
+
   = python submitBatch.py -r=list_HGC_Nov.list -s=root://eoscms//eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/ntuples_v7/jobs/ -v=v7_Jan10 -c=../cfg/H4_t1065_test_batch.cfg -q=1nd --nf=1  =
 
 where:
+
 “-r=list_HGC_Nov.list”: you put the list of runs in list_HGC_Nov.list (inside the file, each line is just a run number),;
+
 “-s=” is the output directory for the job;
+
 “-v=” is just a version tag you put randomly (will be appended to the job script directory name);
+
 “-c=” is the config file you use (note that the cfg file is slightly different as the one used when run interactively, the difference is the path2data);
+
 “--nf=” is the number of input root file per job (for example, there might be hundreds of files to be processed in one run, and with this script you are able to process one file per job and after you get the output you can just hadd different files). 
 You can also add a parameter “--inputDir=” for the directory of the input files (the default one is set in the script submitB
 
