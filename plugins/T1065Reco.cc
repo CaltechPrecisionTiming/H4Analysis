@@ -580,8 +580,8 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
       }                    	
        
     //for T1065Tree
-    int ngroup_t   =  int(outCh/9);
-    int nchannel_t =  outCh%9;
+    int ngroup_t   =  int(outCh/6);
+    int nchannel_t =  outCh%6;
 	
     //fill waveform data
     short rawInverted[1024];
