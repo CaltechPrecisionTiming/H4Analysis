@@ -87,6 +87,9 @@ void T1065Tree::Init(vector<string>& names, vector<string>& timetypes)
   tree_->Branch("linearTime30", linearTime30, "linearTime30[36]/F");
   tree_->Branch("linearTime45", linearTime45, "linearTime45[36]/F");
   tree_->Branch("linearTime60", linearTime60, "linearTime60[36]/F");
+  tree_->Branch("sigmoidTime", sigmoidTime, "sigmoidTime[36]/F");
+  tree_->Branch("fullFitTime", fullFitTime, "fullFitTime[36]/F");
+  tree_->Branch("constantThresholdTime", constantThresholdTime, "constantThresholdTime[36]/F");
   tree_->Branch("TDCx", &TDCx, "TDCx/F");
   tree_->Branch("TDCy", &TDCy, "TDCy/F");
 
