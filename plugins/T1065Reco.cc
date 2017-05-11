@@ -108,7 +108,7 @@ int T1065Reco::FindRealMin( int n, short *a) {
 	  noise = abs(a[i]);
 	}
     }
-
+  //std::cout << "noise: " << noise << std::endl;
   
   for  (int i = 5; i < n-10; i++) {
     if (xmin > a[i] && a[i+1] < 0.5*a[i] && a[i] < -3*noise && a[i] < -50.)  
@@ -253,16 +253,28 @@ void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, f
   double x_low, x_high, y, dummy;
   double ymax;
   pulse->GetPoint(index_min, x_low, ymax);
-  for ( int i = 1; i < 100; i++ )
+  //std::cout << "index_min, x_low, ymax = " << index_min << ", " << x_low << ", " << ymax << std::endl;
+  //std::cout << "0.05ymax, 0.2ymax = " << 0.05*ymax << ", " << 0.2*ymax << std::endl;
+
+  double x_tmp, y_tmp;
+  for (int i=0; i<1024; i++) {
+    pulse->GetPoint(i, x_tmp, y_tmp);
+    //std::cout << "scannnnn " << x_tmp << ", " << y_tmp << std::endl;
+  }
+
+  for ( int i = 1; i < 600; i++ )
     {
       pulse->GetPoint(index_min-i, x_low, y);
-      if ( y < 0.2*ymax ) break;
+      //std::cout << "next val: " << y << " vs " << 0.05*ymax << std::endl;
+      if ( y < 0.05*ymax ) break;
     }
-  for ( int i = 1; i < 100; i++ )
+  //std::cout << "x_low, y = " << x_low << ", " << y <<std::endl;
+  for ( int i = 1; i < 600; i++ )
     {
       pulse->GetPoint(index_min-i, x_high, y);
-      if ( y < 0.9*ymax ) break;
+      if ( y < 0.2*ymax ) break;
     }
+  //std::cout << "x_high, y = " << x_high << ", " << y <<std::endl;
   //pulse->GetPoint(index_min-8, x_low, y);
   //pulse->GetPoint(index_min-3, x_high, y);
 
@@ -270,6 +282,8 @@ void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, f
   //pulse->GetPoint(index_min-12, x_low, y);
   //pulse->GetPoint(index_min-7, x_high, y);
   pulse->GetPoint(index_min, dummy, y);
+
+  //std::cout << "xlow, xhigh = " << x_low << ", " << x_high << std::endl;
   
   TF1* flinear = new TF1("flinear","[0]*x+[1]", x_low, x_high );
   float max = -9999;
@@ -321,7 +335,7 @@ double T1065Reco::GetGaussTime( TGraphErrors* pulse ) {
 };
 
 
-float T1065Reco::GetBaseline(TGraphErrors * pulse, int i_low, int i_high, TString fname ) {
+float T1065Reco::GetBaseline(TGraphErrors * pulse, int i_low, int i_high) {
   double x_low, x_high, y, dummy;
   pulse->GetPoint(i_low, x_low, y);
   pulse->GetPoint(i_high, x_high, y);
@@ -340,6 +354,7 @@ float T1065Reco::GetBaseline(TGraphErrors * pulse, int i_low, int i_high, TStrin
      c->SaveAs(fname+"LinearFit.pdf"); */
   
   float a = flinear->GetParameter(0);
+  //std::cout << a << std::endl;
   delete flinear;
   
   return a;
@@ -349,12 +364,12 @@ float T1065Reco::GetBaseline( int peak, short *a , int nbinsExcludedLeftOfPeak ,
 
   float tmpsum = 0;
   float tmpcount = 0;
-  // std::cout << "GGG\n";
-  // cout << peak << "\n";
-  // if (peak + nbinsExcludedRightOfPeak > 950 || peak-nbinsExcludedLeftOfPeak <= 50) {
-    //cout << "Warning: Peak = " << peak << " is too close to left or right boundary \n";
-    //return 0;
-  // }
+  //std::cout << "GGG\n";
+  //cout << peak << "\n";
+  //if (peak + nbinsExcludedRightOfPeak > 950 || peak-nbinsExcludedLeftOfPeak <= 50) {
+  //  cout << "Warning: Peak = " << peak << " is too close to left or right boundary \n";
+  //  return 0;
+  //}
 
   if (peak+nbinsExcludedRightOfPeak < 1024) {
     for  (int i = peak + nbinsExcludedRightOfPeak; i < 1000; i++) {
@@ -469,7 +484,155 @@ TGraphErrors* T1065Reco::GetTGraphFilter( short* channel, float* time, TString p
 };
 
 
+float ConstantThresholdTime(TGraphErrors* pulse, const float threshold)
+{
+  double* yy = pulse->GetY();
+  double* xx = pulse->GetX();
+  int indexCrossThreshold = 0;
+  for ( int i = 0; i < 1024; i++ )
+    {
+      if (yy[i] > threshold) {
+	indexCrossThreshold = i;
+	break;
+      }
+    }
 
+  double y2 = yy[indexCrossThreshold];
+  double x2 = xx[indexCrossThreshold];
+  double y1 = y2;
+  double x1 = x2; 
+  if (indexCrossThreshold>0) {
+    y1 = yy[indexCrossThreshold-1];
+    x1 = xx[indexCrossThreshold-1];
+  }
+  double xThreshold = (threshold - y1) * (x2-x1)/(y2-y1) + x1;  
+
+  return xThreshold;
+};
+
+float SigmoidTimeFit(TGraphErrors * pulse, const float index_min, int event, TString fname, bool makePlot )
+{
+  double x_low, x_high, y, dummy;
+  double ymax;
+  pulse->GetPoint(index_min, x_low, ymax);
+  
+  pulse->GetPoint(index_min-150, x_low, y);
+  
+  for ( int i = 1; i < 200; i++ )
+    {
+      pulse->GetPoint(index_min-i, x_high, y);
+      if ( y < 0.6*ymax ) break;
+    }
+  //pulse->GetPoint(index_min-8, x_low, y);
+  //pulse->GetPoint(index_min-3, x_high, y);
+
+
+  //pulse->GetPoint(index_min-12, x_low, y);
+  //pulse->GetPoint(index_min-7, x_high, y);
+  pulse->GetPoint(index_min, dummy, y);
+  
+  TF1* fsigmoid = new TF1("fsigmoid","[0]/(1.0+exp(-(x-[1])/[2]))",x_low-50,x_high+50);
+  fsigmoid->SetParameter(0,1000);
+  fsigmoid->SetParLimits(0,0,10000);
+  fsigmoid->SetParameter(1,50);
+  fsigmoid->SetParameter(2,2);
+  
+  float max = -9999;
+  double* yy = pulse->GetY();
+  
+  for ( int i = 0; i < 1024; i++ )
+    {
+      if ( yy[i] > max ) max = yy[i];
+    }
+  //std::cout << "max: " << max << std::endl;
+
+  /*if( max < 10 || index_min < 0 || index_min > 1023 )
+    {
+    std::cout << "DEB: skipping event--> " << event << std::endl;
+      return;
+    }
+  */
+  pulse->Fit("fsigmoid","Q","", x_low, x_high );
+  double maxAmp   = fsigmoid->GetParameter(0);
+  double midpoint = fsigmoid->GetParameter(1);
+  double width    = fsigmoid->GetParameter(2);
+  
+  if ( makePlot )
+    {
+      TCanvas* c = new TCanvas("canvas","canvas",800,400) ;
+      pulse->GetXaxis()->SetLimits(x_low-50, x_high+50);
+      pulse->SetMarkerSize(0.3);
+      pulse->SetMarkerStyle(20);
+      pulse->Draw("AP");
+      fsigmoid->SetLineColor(kBlue);
+      fsigmoid->Draw("same");
+      c->SaveAs(fname+"Sigmoid.pdf");
+      delete c;
+    }
+  
+
+  return midpoint-width*log(maxAmp/0.1 -1);
+  
+  delete fsigmoid;
+};
+
+float FullFitScint( TGraphErrors * pulse, const float index_min, int event, TString fname, bool makePlot) 
+{
+
+  double x_max;
+  double ymax;
+  pulse->GetPoint(index_min, x_max, ymax);
+  TF1* fullFit = new TF1("fullFit","[0]*([1]/2.0)*exp([1]/2.*(2*[2]+[1]*[3]*[3]-2*x))*ROOT::Math::erfc(([2]+[1]*[3]*[3]-x)/(TMath::Sqrt(2.)*[3]))",x_max-50,x_max+50);
+  fullFit->SetParameter(0,ymax/0.1);
+  fullFit->SetParameter(1,0.5);
+  fullFit->SetParameter(2,135);
+  fullFit->SetParameter(3,10);
+  
+  float max = -9999;
+  double* yy = pulse->GetY();
+  
+  for ( int i = 0; i < 1024; i++ )
+    {
+      if ( yy[i] > max ) max = yy[i];
+    }
+ 
+  pulse->Fit("fullFit","Q","", x_max-50, x_max+50 );
+  double maxAmp   = fullFit->GetParameter(0);
+  double lambda   = fullFit->GetParameter(1);
+  double mu       = fullFit->GetParameter(2);
+  double sigma    = fullFit->GetParameter(3);
+
+  mu = -999;
+  for( int i = 0; i < 1000; i++ )
+    {
+      if ( fullFit->Eval(30.+0.001*i) > 0.05*ymax )
+	{
+	  mu = 30.+0.001*i;
+	  break;
+	}
+    }
+
+  TLine* line  = new TLine( mu, 0, mu, 1000);
+  if ( makePlot )
+    {
+      TCanvas* c = new TCanvas("canvas","canvas",800,400) ;
+      pulse->GetXaxis()->SetLimits(0, 200);
+      pulse->SetMarkerSize(0.3);
+      pulse->SetMarkerStyle(20);
+      pulse->Draw("AP");
+      fullFit->SetLineColor(kBlue-3);
+      fullFit->Draw("same");
+      line->Draw("same");
+      line->SetLineColor(kRed);
+      line->SetLineWidth(2);
+      line->SetLineStyle(2);
+      c->SaveAs(fname+"fullFit.pdf");
+      delete c;
+    }
+
+  delete fullFit;
+  return mu;
+};
 
 
 bool T1065Reco::Begin(CfgManager& opts, uint64* index)
@@ -618,7 +781,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	
     //our baseline subtraction
     float baseline;
-    if (channel == "CdTe") {
+    /*    if (channel == "CdTe") {
       //For Cadmium Sensor signal, use left of pulse to determine the baseline
       baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 1024);
       //if baseline is 0, then the peak occurs too far near the left edge and the pulse is likely pure noise
@@ -631,16 +794,17 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
       if (baseline == 0) baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 70);
     } else if (channel == "LYSO") {
       baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 150);
-    } else {
-      baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 70);
-    }
+      } else {*/
+    baseline = GetBaseline(pulse, 10, 50);
+    //}
     t1065Tree_.base[outCh] = baseline;	
 
     //Correct pulse shape for baseline offset
     for(int j = 0; j < 1024; j++) {
-      // cout << "RAW pulse : " << j << " : " << t1065Tree_.raw[outCh][j] << " - " << baseline << " = " 
-      // 	   << (short)((double)(t1065Tree_.raw[outCh][j]) + baseline) << "\n";
-      t1065Tree_.raw[outCh][j] = (short)((double)(t1065Tree_.raw[outCh][j]) - baseline);
+      //cout << "RAW pulse : " << j << " : " << t1065Tree_.raw[outCh][j] << " - " << baseline << " = " 
+      //<< (short)((double)(t1065Tree_.raw[outCh][j]) + baseline) << "\n";
+      t1065Tree_.raw[outCh][j] = (short)((double)(t1065Tree_.raw[outCh][j]) + baseline);
+      //std::cout << "??? " << t1065Tree_.raw[outCh][j] << std::endl;
     }
 
     // DRS-glitch finder: zero out bins which have large difference
@@ -680,7 +844,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     if (index_min > 0) {
       pulse->GetPoint(index_min, tmpMin, tmpAmp);
       //cout << "amp: " << tmpAmp << " " << t1065Tree_.raw[outCh][index_min] << "\n";
-      t1065Tree_.amp[outCh] = tmpAmp * (1.0 / 4096.0); 
+      t1065Tree_.amp[outCh] = tmpAmp;// * (1.0 / 4096.0); 
     } else {
       t1065Tree_.amp[outCh] = 0;
     }
@@ -705,6 +869,9 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
       float timecf30   = 0;
       float timecf45   = 0;
       float timecf60   = 0;
+      float timesigmoid = 0;
+      float timefullfit = 0;
+      float timeconsthresh = 0;
       if( drawDebugPulses) {
 	timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge, pulseName); // get the time stamp
 	float fs[5];
@@ -717,7 +884,9 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	timecf15 = fs[1];
 	timecf30 = fs[2];
 	timecf45 = fs[3];
-	timecf60 = fs[4];	 
+	timecf60 = fs[4];
+	//timesigmoid = SigmoidTimeFit( pulse, index_min, event, "SigmoidFit_" + pulseName, true );
+	//timefullfit = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, true );
       } else {
 	timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge); // get the time stamp
 	float fs[5];
@@ -731,6 +900,8 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	timecf30 = fs[2];
 	timecf45 = fs[3];
 	timecf60 = fs[4];
+	//timesigmoid = SigmoidTimeFit( pulse, index_min, event, "SigmoidFit_" + pulseName, false );
+	//timefullfit = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, false );
       }
       t1065Tree_.gauspeak[outCh]   = timepeak;
       t1065Tree_.linearTime0[outCh] = timecf0;
@@ -739,6 +910,10 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
       t1065Tree_.linearTime45[outCh] = timecf45;
       t1065Tree_.linearTime60[outCh] = timecf60;
       t1065Tree_.risetime[outCh]   = risetime;
+      //t1065Tree_.sigmoidTime[outCh] = timesigmoid;
+      //t1065Tree_.fullFitTime[outCh] = timefullfit;
+      //t1065Tree_.constantThresholdTime[outCh] = ConstantThresholdTime( pulse, 50);
+      
   }
 	
     delete pulse;

@@ -15,6 +15,7 @@
 #include "TString.h"
 #include "TCanvas.h"
 #include "TString.h"
+#include "TLine.h"
 
 class T1065Reco: public PluginBase
 {
@@ -41,10 +42,14 @@ public:
     float RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float constantFraction, TString fname, bool makePlot );
     void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, float &risetime, int event, TString fname, bool makePlot );
     double GetGaussTime( TGraphErrors* pulse );
-    float GetBaseline(TGraphErrors * pulse, int i_low, int i_high, TString fname );
+    float GetBaseline(TGraphErrors * pulse, int i_low, int i_high);
     float GetBaseline( int peak, short *a , int nbinsExcludedLeftOfPeak , int nbinsExcludedRightOfPeak );
     float GetPulseIntegral(int peak, short *a, std::string option);
     TGraphErrors* GetTGraphFilter( short* channel, float* time, TString pulseName, bool makePlot );
+
+    float SigmoidTimeFit(TGraphErrors * pulse, const float index_min, int event, TString fname, bool makePlot = false );
+    float FullFitScint( TGraphErrors * pulse, const float index_min, int event, TString fname, bool makePlot = false );
+    float ConstantThresholdTime(TGraphErrors * pulse, const float threshold);
 
 
 private:    

@@ -75,6 +75,10 @@ public:
   float linearTime30[36];
   float linearTime45[36];
   float linearTime60[36];
+  float sigmoidTime[36];
+  float fullFitTime[36];
+  float constantThresholdTime[36];
+
   int t[36864];
   int t0[1024];
   float TDCx;
