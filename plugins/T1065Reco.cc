@@ -93,6 +93,33 @@ int T1065Reco::FindMinAbsolute( int n, short *a) {
   return loc;
 }
 
+int T1065Reco::DigitalFindMin( int n, short *a) {
+  
+  if (n <= 0 || !a) return -1;
+  float xmin = a[5];
+  int loc = 0;
+  int rise = 0;
+  //for  (int i = 5; i < n-10; i++) {
+  for  (int i = 0; i < n-10; i++) {
+    //std::cout << i << " " << a[i] << std::endl;
+    if (xmin > a[i])  
+      {
+	if (a[i]<-100 && rise==0) {
+	  rise=i;
+	  //std::cout << "rise = " << rise << std::endl;
+	}
+	
+	//std::cout << "lower, " << i << ", " << a[i] << "; " << loc << ", " << xmin << std::endl;
+	if (i-loc>20 && i-rise>50 && rise!=0) break;
+
+	xmin = a[i];
+	loc = i;
+      }
+  }
+  //std::cout << "loc0: " << loc << std::endl;
+  return loc;
+}
+
 int T1065Reco::FindRealMin( int n, short *a) {  
   if (n <= 0 || !a) return -1;
   float xmin = a[5];
@@ -140,13 +167,13 @@ int T1065Reco::FindRealMin( int n, short *a) {
       xmin_init = xmin_new;
 
       if( loc_new == loc ) break;
-      //std::cout << "new peak @ " << loc_new << ", ymin: " << xmin_new << std::endl;
+      std::cout << "new peak @ " << loc_new << ", ymin: " << xmin_new << std::endl;
       if ( xmin_new > -2*noise || xmin_new > -40 ) loc_new = 0;
       xmin_new = a[5];
       loc = loc_new;
     }
 
-  //std::cout << "LOC2: " << loc << std::endl;                                                                                                                               
+  std::cout << "LOC2: " << loc << std::endl;                                                                                                                               
   /*                                                                
 								    while ( xmin_init != xmin_new ) {
 								    for (int i = 5; i < loc - 50; i++) {
@@ -253,38 +280,24 @@ void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, f
   double x_low, x_high, y, dummy;
   double ymax;
   pulse->GetPoint(index_min, x_low, ymax);
-  //std::cout << "index_min, x_low, ymax = " << index_min << ", " << x_low << ", " << ymax << std::endl;
-  //std::cout << "0.05ymax, 0.2ymax = " << 0.05*ymax << ", " << 0.2*ymax << std::endl;
 
   double x_tmp, y_tmp;
   for (int i=0; i<1024; i++) {
     pulse->GetPoint(i, x_tmp, y_tmp);
-    //std::cout << "scannnnn " << x_tmp << ", " << y_tmp << std::endl;
   }
 
   for ( int i = 1; i < 600; i++ )
     {
       pulse->GetPoint(index_min-i, x_low, y);
-      //std::cout << "next val: " << y << " vs " << 0.05*ymax << std::endl;
       if ( y < 0.05*ymax ) break;
     }
-  //std::cout << "x_low, y = " << x_low << ", " << y <<std::endl;
   for ( int i = 1; i < 600; i++ )
     {
       pulse->GetPoint(index_min-i, x_high, y);
       if ( y < 0.2*ymax ) break;
     }
-  //std::cout << "x_high, y = " << x_high << ", " << y <<std::endl;
-  //pulse->GetPoint(index_min-8, x_low, y);
-  //pulse->GetPoint(index_min-3, x_high, y);
-
-
-  //pulse->GetPoint(index_min-12, x_low, y);
-  //pulse->GetPoint(index_min-7, x_high, y);
   pulse->GetPoint(index_min, dummy, y);
 
-  //std::cout << "xlow, xhigh = " << x_low << ", " << x_high << std::endl;
-  
   TF1* flinear = new TF1("flinear","[0]*x+[1]", x_low, x_high );
   float max = -9999;
   double* yy = pulse->GetY();
@@ -293,7 +306,6 @@ void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, f
     {
       if ( yy[i] > max ) max = yy[i];
     }
-  //std::cout << "max: " << max << std::endl;
 
   /*if( max < 10 || index_min < 0 || index_min > 1023 )
     {
@@ -309,7 +321,7 @@ void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, f
     {
       std::cout << "make plot" << std::endl;
       TCanvas* c = new TCanvas("canvas","canvas",800,400) ;
-      pulse->GetXaxis()->SetLimits(x_low-10, x_high+10);
+      pulse->GetXaxis()->SetLimits(x_low-100, x_high+100);
       pulse->SetMarkerSize(0.3);
       pulse->SetMarkerStyle(20);
       pulse->Draw("AP");
@@ -329,6 +341,77 @@ void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, f
   delete flinear;
 };
 
+void T1065Reco::DigitalRisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, float &risetime, int event, TString fname, bool makePlot ) {
+  double x_low, x_high, y, dummy;
+  double ymax;
+  pulse->GetPoint(index_min, x_low, ymax);
+
+  double x_tmp, y_tmp;
+  for (int i=0; i<1024; i++) {
+    pulse->GetPoint(i, x_tmp, y_tmp);
+  }
+
+  for ( int i = 1; i < 600; i++ )
+    {
+      pulse->GetPoint(index_min-i, x_low, y);
+
+      if ( y < 0.05*ymax ) break;
+    }
+
+  for ( int i = 1; i < 600; i++ )
+    {
+      pulse->GetPoint(index_min-i, x_high, y);
+      if ( y < 0.95*ymax ) break;
+    }
+  pulse->GetPoint(index_min, dummy, y);
+
+  TF1* flinear = new TF1("flinear","[0]*x+[1]", x_low, x_high );
+  float max = -9999;
+  double* yy = pulse->GetY();
+  
+  for ( int i = 0; i < 1024; i++ )
+    {
+      if ( yy[i] > max ) max = yy[i];
+    }
+
+  pulse->Fit("flinear","Q","", x_low, x_high );
+  double slope = flinear->GetParameter(0);
+  double b     = flinear->GetParameter(1);
+  
+  if ( makePlot )
+    {
+      std::cout << "make plot" << std::endl;
+      TCanvas* c = new TCanvas("canvas","canvas",800,400) ;
+      pulse->GetXaxis()->SetLimits(x_low-100, x_high+100);
+      pulse->SetMarkerSize(0.3);
+      pulse->SetMarkerStyle(20);
+      pulse->Draw("AP");
+      c->SaveAs(fname+"LinearFit.pdf");
+      //delete c;
+    }
+  if (slope<=0) {
+
+    tstamp[0]=1000;
+    tstamp[1]=1000;
+    tstamp[2]=1000;
+    tstamp[3]=1000;
+    tstamp[4]=1000;
+    risetime =1000;
+    std::cout << "!!!!!! problem: " << slope << ", " << risetime << std::endl;
+  }
+  else {
+    tstamp[0] = (0.0*y-b)/slope;
+    tstamp[1] = (0.15*y-b)/slope;
+    tstamp[2] = (0.30*y-b)/slope;
+    tstamp[3] = (0.45*y-b)/slope;
+    tstamp[4] = (0.60*y-b)/slope;
+    //if (slope != 0) {
+    risetime = (0.90*y-b)/slope - (0.10*y-b)/slope;
+    //}
+  }
+ 
+  delete flinear;
+};
 
 double T1065Reco::GetGaussTime( TGraphErrors* pulse ) {
   return 0;
@@ -339,6 +422,38 @@ float T1065Reco::GetBaseline(TGraphErrors * pulse, int i_low, int i_high) {
   double x_low, x_high, y, dummy;
   pulse->GetPoint(i_low, x_low, y);
   pulse->GetPoint(i_high, x_high, y);
+  
+  TF1* flinear = new TF1("flinear","[0]", x_low, x_high );
+  
+  pulse->Fit("flinear","RQ","", x_low, x_high );
+  
+  /* std::cout << "make plot" << std::endl;
+     std::cout << x_low << x_high << fname << std::endl;
+     TCanvas* c = new TCanvas("canvas","canvas",800,400) ;
+     pulse->GetXaxis()->SetLimits(x_low-3, x_high+3);
+     pulse->SetMarkerSize(1);
+     pulse->SetMarkerStyle(20);
+     pulse->Draw("AP");
+     c->SaveAs(fname+"LinearFit.pdf"); */
+  
+  float a = flinear->GetParameter(0);
+  //std::cout << a << std::endl;
+  delete flinear;
+  
+  return a;
+}
+
+float T1065Reco::DigitalGetBaseline(TGraphErrors * pulse, int i_low, int i_high) {
+  double x_low, x_high, y_low, y_high, dummy;
+  pulse->GetPoint(i_low, x_low, y_low);
+  pulse->GetPoint(i_high, x_high, y_high);
+
+  
+
+  if (abs(y_high-y_low)>30) {
+    pulse->GetPoint(0, x_low, y_low);
+    pulse->GetPoint(floor(i_high/10), x_high, y_high);
+  }
   
   TF1* flinear = new TF1("flinear","[0]", x_low, x_high );
   
@@ -717,8 +832,9 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
   //---setup output event 
   int outCh=0;
 
-  t1065Tree_.event = eventCount_;
   eventCount_++;
+  t1065Tree_.event = eventCount_;
+  //std::cout << eventCount_ << std::endl;
   if (eventCount_ % 100 == 0) cerr << "Processing Event " << eventCount_ << "\n";
 
   //if (t1065Tree_.event != 39) return true;
@@ -771,40 +887,43 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
       t1065Tree_.time[ngroup_t][i] = float(i) * 0.200;
     }
 
-    //find minimum
-    int index_min = FindMinAbsolute(1024, t1065Tree_.raw[outCh]); // return index of the minc
-
-
     //Make Pulse shape Graph
     TString pulseName = Form("pulse_event%d_ch%d", eventCount_, outCh);
     TGraphErrors* pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t] ) );
-	
+    //TGraphErrors* pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], index ) );
+
+    /*TCanvas* c = new TCanvas("canvas","canvas",800,400) ;
+    //pulse->GetXaxis()->SetLimits(x_low-50, x_high+50);
+    pulse->SetMarkerSize(0.3);
+    pulse->SetMarkerStyle(20);
+    pulse->Draw("AP");
+    c->SaveAs(pulseName+"_sanity.pdf");
+    delete c;*/
+
     //our baseline subtraction
     float baseline;
-    /*    if (channel == "CdTe") {
-      //For Cadmium Sensor signal, use left of pulse to determine the baseline
-      baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 1024);
-      //if baseline is 0, then the peak occurs too far near the left edge and the pulse is likely pure noise
-      //in that case, use the nominal range to determine baseline
-      if (baseline == 0) baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 70);
-    } else if (channel == "CdTeNoise") {
-      baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 0,0);    
-    } else if (channel == "SCINT" || channel == "CH3") {
-      baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 1024);
-      if (baseline == 0) baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 70);
-    } else if (channel == "LYSO") {
-      baseline = GetBaseline( index_min, t1065Tree_.raw[outCh], 30, 150);
-      } else {*/
-    baseline = GetBaseline(pulse, 10, 50);
-    //}
+    if (channel.substr(0,4) == "NINO") {
+      baseline = DigitalGetBaseline(pulse, 0, 40);
+    }
+    else {
+      baseline = GetBaseline(pulse, 10, 50);
+    }
     t1065Tree_.base[outCh] = baseline;	
 
     //Correct pulse shape for baseline offset
     for(int j = 0; j < 1024; j++) {
-      //cout << "RAW pulse : " << j << " : " << t1065Tree_.raw[outCh][j] << " - " << baseline << " = " 
-      //<< (short)((double)(t1065Tree_.raw[outCh][j]) + baseline) << "\n";
       t1065Tree_.raw[outCh][j] = (short)((double)(t1065Tree_.raw[outCh][j]) + baseline);
-      //std::cout << "??? " << t1065Tree_.raw[outCh][j] << std::endl;
+    }
+
+    //find minimum
+    int index_min = 0;
+    if (channel.substr(0,4) == "NINO") {
+      //std::cout << channel << std::endl;
+      index_min = DigitalFindMin(1024, t1065Tree_.raw[outCh]);
+      //std::cout << index_min << ", " << t1065Tree_.time[ngroup_t][index_min] << std::endl;
+    }
+    else {
+      index_min = FindMinAbsolute(1024, t1065Tree_.raw[outCh]); // return index of the minc
     }
 
     // DRS-glitch finder: zero out bins which have large difference
@@ -827,16 +946,12 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	
     delete pulse;
 
-	
     // Find Peak Location using the improved algorithm
     pulse = new TGraphErrors( GetTGraph( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t] ) );
-    //index_min = FindRealMin (1024, t1065Tree_.raw[outCh]); // return index of the min
-    t1065Tree_.xmin[outCh] = index_min;
-	
+    t1065Tree_.xmin[outCh] = index_min;	
 	
     //Apply Filter
     pulse = GetTGraphFilter( t1065Tree_.raw[outCh], t1065Tree_.time[ngroup_t], pulseName , false);
-
 	
     //Compute Amplitude : use units V
     Double_t tmpAmp = 0.0;
@@ -876,7 +991,13 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge, pulseName); // get the time stamp
 	float fs[5];
 	if ( t1065Tree_.xmin[outCh] != 0.0 ) {
-	  RisingEdgeFitTime( pulse, index_min, fs, risetime, eventCount_, "linearFit_" + pulseName, true);
+	  if (channel.substr(0,4) == "NINO") {
+	    DigitalRisingEdgeFitTime( pulse, index_min, fs, risetime, eventCount_, "digitalFit_" + pulseName, true);
+	    if (risetime==1000) std::cout << eventCount_ << ", " << outCh << " has a problem with the rising edge" << std::endl;
+	  }
+	  else {
+	    RisingEdgeFitTime( pulse, index_min, fs, risetime, eventCount_, "linearFit_" + pulseName, true);
+	  }
 	} else {
 	  for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;
 	}
@@ -891,7 +1012,14 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge); // get the time stamp
 	float fs[5];
 	if ( t1065Tree_.xmin[outCh] != 0.0 ) {
-	  RisingEdgeFitTime( pulse, index_min, fs, risetime, eventCount_, "", false);
+	  if (channel.substr(0,4) == "NINO") {
+	    //std::cout << eventCount_ << ", "<< index_min << ", " << t1065Tree_.time[ngroup_t][index_min] << std::endl;
+	    DigitalRisingEdgeFitTime( pulse, index_min, fs, risetime, eventCount_, "digitalFit_" + pulseName, false);
+	    if (risetime==1000) std::cout << eventCount_ << ", " << outCh << " has a problem with the rising edge" << std::endl;
+	  }
+	  else {
+	    RisingEdgeFitTime( pulse, index_min, fs, risetime, eventCount_, "linearFit_" + pulseName, false);
+	  }
 	} else {
 	  for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;
 	}
@@ -910,6 +1038,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
       t1065Tree_.linearTime45[outCh] = timecf45;
       t1065Tree_.linearTime60[outCh] = timecf60;
       t1065Tree_.risetime[outCh]   = risetime;
+
       //t1065Tree_.sigmoidTime[outCh] = timesigmoid;
       //t1065Tree_.fullFitTime[outCh] = timefullfit;
       //t1065Tree_.constantThresholdTime[outCh] = ConstantThresholdTime( pulse, 50);
@@ -950,8 +1079,6 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 			 *min_element(timeD.begin(), timeD.begin()+timeD.size()))*0.005;
     else
       t1065Tree_.TDCy = -1000;
-
-
 
   //---fill the output trees 
   //---reco var
