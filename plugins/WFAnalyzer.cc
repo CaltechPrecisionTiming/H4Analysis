@@ -77,6 +77,8 @@ bool WFAnalyzer::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plu
         auto shared_data = plugins[srcInstance_]->GetSharedData(srcInstance_+"_"+channel, "", false);
         if(shared_data.size() != 0)
             WFs_[channel] = (WFClass*)shared_data.at(0).obj;
+        else
+            cout << "[WFAnalizer::" << instanceName_ << "]: channels samples not found check DigiReco step" << endl; 
     }
     
     //---compute reco variables
@@ -88,7 +90,7 @@ bool WFAnalyzer::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plu
             ++outCh;
             continue;
         }
-        
+
         //---subtract a specified channel if requested
         if(opts.OptExist(channel+".subtractChannel") && WFs_.find(opts.GetOpt<string>(channel+".subtractChannel")) != WFs_.end())
             *WFs_[channel] -= *WFs_[opts.GetOpt<string>(channel+".subtractChannel")];        
@@ -112,7 +114,7 @@ bool WFAnalyzer::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plu
         digiTree_.charge_sig[outCh] = WFs_[channel]->GetSignalIntegral(opts.GetOpt<int>(channel+".signalInt", 0), 
                                                                      opts.GetOpt<int>(channel+".signalInt", 1));
         //---compute time with all the requested time reconstruction method
-        for(int iT=0; iT<timeRecoTypes_.size(); ++iT)
+        for(unsigned int iT=0; iT<timeRecoTypes_.size(); ++iT)
         {
             //---compute time with selected method or store default value (-99)
             if(timeOpts_.find(channel+"."+timeRecoTypes_[iT]) != timeOpts_.end())
@@ -152,7 +154,7 @@ bool WFAnalyzer::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plu
             auto analizedWF = WFs_[channel]->GetSamples();
             int nSamples = analizedWF->size();
             float tUnit = WFs_[channel]->GetTUnit();
-            for(int jSample=0; jSample<analizedWF->size(); ++jSample)
+            for(unsigned int jSample=0; jSample<analizedWF->size(); ++jSample)
             {
                 outWFTree_.WF_ch[jSample+outCh*nSamples] = outCh;
                 outWFTree_.WF_time[jSample+outCh*nSamples] = jSample*tUnit;
