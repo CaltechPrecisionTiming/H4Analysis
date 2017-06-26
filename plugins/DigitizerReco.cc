@@ -51,7 +51,7 @@ bool DigitizerReco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& 
                 cout << ">>>DigiReco WARNING: skipped event" << endl;
                 return false;
             }
-            WFs[channel]->AddSample(event.digiSampleValue[iSample]);
+            WFs[channel]->AddSample(1.0*event.digiSampleValue[iSample]);
         }
         if(opts.OptExist(channel+".useTrigRef") && opts.GetOpt<bool>(channel+".useTrigRef"))
             WFs[channel]->SetTrigRef(trigRef);
