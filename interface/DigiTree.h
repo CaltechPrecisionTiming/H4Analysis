@@ -53,7 +53,6 @@ public:
     int*          channels;
     int*          time_types;
     float*        calibration;
-
 };
 
 #endif

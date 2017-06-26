@@ -83,15 +83,15 @@ void ReadInputFiles(CfgManager& opts, TChain* inTree)
 
     //---Get file list searching in specified path (eos or locally)
     if(path.find("/eos/cms") != string::npos)
-      {
+    {
 	if ( getMachineDomain() != "cern.ch" )
-	  ls_command = string("gfal-ls root://eoscms/"+path+run+" | grep 'root' > tmp/"+run+".list");
+            ls_command = string("gfal-ls root://eoscms/"+path+run+" | grep 'root' > tmp/"+run+".list");
 	else
-	  ls_command = string("/afs/cern.ch/project/eos/installation/0.3.84-aquamarine/bin/eos.select ls "+path+run+" | grep 'root' > tmp/"+run+".list");
-      }
+            ls_command = string("ls "+path+run+" | grep 'root' > tmp/"+run+".list");
+    }
     else if(path.find("srm://") != string::npos)
-        ls_command = string("lcg-ls "+path+run+
-                            " | sed -e 's:^.*\\/cms\\/:root\\:\\/\\/xrootd-cms.infn.it\\/\\/:g' | grep 'root' > tmp/"+run+".list");
+        ls_command = string("echo "+path+run+"/`gfal-ls "+path+run+
+                            "` | sed -e 's:^.*\\/cms\\/:root\\:\\/\\/xrootd-cms.infn.it\\/\\/:g' | grep 'root' > tmp/"+run+".list");
     else
         ls_command = string("ls "+path+run+" | grep 'root' > tmp/"+run+".list");
     system(ls_command.c_str());
@@ -100,8 +100,16 @@ void ReadInputFiles(CfgManager& opts, TChain* inTree)
     {
         if(path.find("/eos/cms") != string::npos)
         {
-            std::cout << "+++ Adding file " << ("root://eoscms/"+path+run+"/"+file).c_str() << std::endl;
-            inTree->AddFile(("root://eoscms/"+path+run+"/"+file).c_str());
+            if ( getMachineDomain() != "cern.ch" )
+            {
+                std::cout << "+++ Adding file " << ("root://eoscms/"+path+run+"/"+file).c_str() << std::endl;
+                inTree->AddFile(("root://eoscms/"+path+run+"/"+file).c_str());
+            }
+            else
+            {
+                std::cout << "+++ Adding file " << (path+run+"/"+file).c_str() << std::endl;
+                inTree->AddFile((path+run+"/"+file).c_str());
+            }
         }
         else if(path.find("srm://") != string::npos)
         {
@@ -115,7 +123,7 @@ void ReadInputFiles(CfgManager& opts, TChain* inTree)
         }
         ++nFiles;
     }
-
+    std::cout << "+++ Added " << nFiles << " files with " << inTree->GetEntries() << " events" << std::endl;
     return;
 }
 
@@ -214,13 +222,17 @@ int main(int argc, char* argv[])
                  << endl;
             TrackProcess(cpu, mem, vsz, rss);
         }
-
-        //---call ProcessEvent for each plugin
+        
+        //---call ProcessEvent for each plugin and check the return status
+        bool status=true;
         for(auto& plugin : pluginSequence)
-            plugin->ProcessEvent(h4Tree, pluginMap, opts);
-
+        {
+            status &= plugin->ProcessEvent(h4Tree, pluginMap, opts);
+        }
+        
         //---fill the main tree with info variables and increase event counter
         mainTree.time_stamp = h4Tree.evtTimeStart;
+        mainTree.evt_flag = status;
         mainTree.run = h4Tree.runNumber;
         mainTree.spill = h4Tree.spillNumber;
         mainTree.event = h4Tree.evtNumber;
@@ -232,7 +244,7 @@ int main(int argc, char* argv[])
     for(auto& plugin : pluginSequence)
     {
         //---call endjob for each plugin        
-        bool r_status = plugin->End(opts);
+        // bool r_status = plugin->End(opts);
         // if(!r_status)
         // {
         //     cout << ">>> ERROR: plugin returned bad flag from End() call: " << plugin->GetInstanceName() << endl;
