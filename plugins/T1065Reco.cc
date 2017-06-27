@@ -276,7 +276,7 @@ float T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, 
 };
 
 
-void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, float &risetime, int event, TString fname, bool makePlot ) {
+void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float fitLowEdge, const float fitHighEdge, float* tstamp, float &risetime, int event, TString fname, bool makePlot ) {
   double x_low, x_high, y, dummy;
   double ymax;
   pulse->GetPoint(index_min, x_low, ymax);
@@ -289,12 +289,12 @@ void T1065Reco::RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, f
   for ( int i = 1; i < 600; i++ )
     {
       pulse->GetPoint(index_min-i, x_low, y);
-      if ( y < 0.05*ymax ) break;
+      if ( y < fitLowEdge*ymax ) break;
     }
   for ( int i = 1; i < 600; i++ )
     {
       pulse->GetPoint(index_min-i, x_high, y);
-      if ( y < 0.2*ymax ) break;
+      if ( y < fitHighEdge*ymax ) break;
     }
   pulse->GetPoint(index_min, dummy, y);
 
@@ -866,12 +866,15 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     short rawInverted[1024];
 	
     int NSample_t = WFs_[channel]->GetNSample();
+    //NSample_t = 1024;//
+    //cout << "NSample: " << NSample_t << "\n";
     for(int iSample=0; iSample<1024; iSample++) {
       //t1065Tree_.b_c[ngroup_t][nchannel_t][iSample] = (short)(WFs_[channel]->GetiSample(iSample));
       if(iSample<NSample_t)
 	{
 	  t1065Tree_.raw[outCh][iSample] = (short)(-1*WFs_[channel]->GetiSample(iSample));
 	  rawInverted[iSample] = (short)(-1*t1065Tree_.raw[outCh][iSample]);
+	  //cout << "Debug: " << iSample << " : " << WFs_[channel]->GetiSample(iSample) << "\n";
 	}
       else
 	{
@@ -906,7 +909,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
       baseline = DigitalGetBaseline(pulse, 0, 40);
     }
     else {
-      baseline = GetBaseline(pulse, 10, 50);
+      baseline = GetBaseline(pulse, 5, 45);
     }
     t1065Tree_.base[outCh] = baseline;	
 
@@ -959,7 +962,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     if (index_min > 0) {
       pulse->GetPoint(index_min, tmpMin, tmpAmp);
       //cout << "amp: " << tmpAmp << " " << t1065Tree_.raw[outCh][index_min] << "\n";
-      t1065Tree_.amp[outCh] = tmpAmp;// * (1.0 / 4096.0); 
+      t1065Tree_.amp[outCh] = tmpAmp * (1.0 / 4096.0); 
     } else {
       t1065Tree_.amp[outCh] = 0;
     }
@@ -972,8 +975,8 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     //Gauss Time-Stamping 
     Double_t min = 0.; Double_t low_edge =0.; Double_t high_edge =0.; Double_t y = 0.; 
     pulse->GetPoint(index_min, min, y);	
-    pulse->GetPoint(index_min-3, low_edge, y); // get the time of the low edge of the fit range
-    pulse->GetPoint(index_min+3, high_edge, y);  // get the time of the upper edge of the fit range	
+    pulse->GetPoint(index_min-4, low_edge, y); // get the time of the low edge of the fit range
+    pulse->GetPoint(index_min+4, high_edge, y);  // get the time of the upper edge of the fit range	
 
 
     if (doTimeRecoFits) {
@@ -987,6 +990,8 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
       float timesigmoid = 0;
       float timefullfit = 0;
       float timeconsthresh = 0;
+      float cft_low_range  = 0.15;
+      float cft_high_range = 0.70;
       if( drawDebugPulses) {
 	timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge, pulseName); // get the time stamp
 	float fs[5];
@@ -996,7 +1001,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	    if (risetime==1000) std::cout << eventCount_ << ", " << outCh << " has a problem with the rising edge" << std::endl;
 	  }
 	  else {
-	    RisingEdgeFitTime( pulse, index_min, fs, risetime, eventCount_, "linearFit_" + pulseName, true);
+	    RisingEdgeFitTime( pulse, index_min, cft_low_range, cft_high_range, fs, risetime, eventCount_, "linearFit_" + pulseName, true);
 	  }
 	} else {
 	  for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;
@@ -1018,7 +1023,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	    if (risetime==1000) std::cout << eventCount_ << ", " << outCh << " has a problem with the rising edge" << std::endl;
 	  }
 	  else {
-	    RisingEdgeFitTime( pulse, index_min, fs, risetime, eventCount_, "linearFit_" + pulseName, false);
+	    RisingEdgeFitTime( pulse, index_min,  cft_low_range, cft_high_range, fs, risetime, eventCount_, "linearFit_" + pulseName, false);
 	  }
 	} else {
 	  for ( int kk = 0; kk < 5; kk++ ) fs[kk] = -999;

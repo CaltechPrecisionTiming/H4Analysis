@@ -41,7 +41,7 @@ public:
     float GausFit_MeanTime(TGraphErrors* pulse, const float index_first, const float index_last);
     float GausFit_MeanTime(TGraphErrors* pulse, const float index_first, const float index_last, TString fname);
     float RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float constantFraction, TString fname, bool makePlot );
-    void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, float &risetime, int event, TString fname, bool makePlot );
+    void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float fitLowEdge, const float fitHighEdge, float* tstamp, float &risetime, int event, TString fname, bool makePlot );
     void DigitalRisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, float &risetime, int event, TString fname, bool makePlot );
     double GetGaussTime( TGraphErrors* pulse );
     float GetBaseline(TGraphErrors * pulse, int i_low, int i_high);
@@ -54,7 +54,7 @@ public:
     float FullFitScint( TGraphErrors * pulse, const float index_min, int event, TString fname, bool makePlot = false );
     float ConstantThresholdTime(TGraphErrors * pulse, const float threshold);
 
-
+ 
 private:    
     //---internal data
     string                      srcInstance_;
