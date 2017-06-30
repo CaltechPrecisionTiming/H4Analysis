@@ -397,7 +397,7 @@ void T1065Reco::DigitalRisingEdgeFitTime(TGraphErrors * pulse, const float index
     tstamp[3]=1000;
     tstamp[4]=1000;
     risetime =1000;
-    std::cout << "!!!!!! problem: " << slope << ", " << risetime << std::endl;
+    //std::cout << "!!!!!! problem: " << slope << ", " << risetime << std::endl;
   }
   else {
     tstamp[0] = (0.0*y-b)/slope;
@@ -998,7 +998,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	if ( t1065Tree_.xmin[outCh] != 0.0 ) {
 	  if (channel.substr(0,4) == "NINO") {
 	    DigitalRisingEdgeFitTime( pulse, index_min, fs, risetime, eventCount_, "digitalFit_" + pulseName, true);
-	    if (risetime==1000) std::cout << eventCount_ << ", " << outCh << " has a problem with the rising edge" << std::endl;
+	    //if (risetime==1000) std::cout << eventCount_ << ", " << outCh << " has a problem with the rising edge" << std::endl;
 	  }
 	  else {
 	    RisingEdgeFitTime( pulse, index_min, cft_low_range, cft_high_range, fs, risetime, eventCount_, "linearFit_" + pulseName, true);
@@ -1020,7 +1020,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	  if (channel.substr(0,4) == "NINO") {
 	    //std::cout << eventCount_ << ", "<< index_min << ", " << t1065Tree_.time[ngroup_t][index_min] << std::endl;
 	    DigitalRisingEdgeFitTime( pulse, index_min, fs, risetime, eventCount_, "digitalFit_" + pulseName, false);
-	    if (risetime==1000) std::cout << eventCount_ << ", " << outCh << " has a problem with the rising edge" << std::endl;
+	    //if (risetime==1000) std::cout << eventCount_ << ", " << outCh << " has a problem with the rising edge" << std::endl;
 	  }
 	  else {
 	    RisingEdgeFitTime( pulse, index_min,  cft_low_range, cft_high_range, fs, risetime, eventCount_, "linearFit_" + pulseName, false);
