@@ -599,8 +599,9 @@ TGraphErrors* T1065Reco::GetTGraphFilter( short* channel, float* time, TString p
 };
 
 
-float ConstantThresholdTime(TGraphErrors* pulse, const float threshold)
+float T1065Reco::ConstantThresholdTime(TGraphErrors * pulse, const float threshold)
 {
+
   double* yy = pulse->GetY();
   double* xx = pulse->GetX();
   int indexCrossThreshold = 0;
@@ -612,15 +613,18 @@ float ConstantThresholdTime(TGraphErrors* pulse, const float threshold)
       }
     }
 
+
+
   double y2 = yy[indexCrossThreshold];
   double x2 = xx[indexCrossThreshold];
   double y1 = y2;
   double x1 = x2; 
+  double xThreshold = x1;
   if (indexCrossThreshold>0) {
     y1 = yy[indexCrossThreshold-1];
     x1 = xx[indexCrossThreshold-1];
+    xThreshold = (threshold - y1) * (x2-x1)/(y2-y1) + x1;  
   }
-  double xThreshold = (threshold - y1) * (x2-x1)/(y2-y1) + x1;  
 
   return xThreshold;
 };
@@ -1013,6 +1017,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	timecf60 = fs[4];
 	//timesigmoid = SigmoidTimeFit( pulse, index_min, event, "SigmoidFit_" + pulseName, true );
 	//timefullfit = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, true );
+	timeconsthresh = ConstantThresholdTime( pulse, 50.0); 
       } else {
 	timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge); // get the time stamp
 	float fs[5];
@@ -1035,6 +1040,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	timecf60 = fs[4];
 	//timesigmoid = SigmoidTimeFit( pulse, index_min, event, "SigmoidFit_" + pulseName, false );
 	//timefullfit = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, false );
+	timeconsthresh = ConstantThresholdTime( pulse, 50.0); 
       }
       t1065Tree_.gauspeak[outCh]   = timepeak;
       t1065Tree_.linearTime0[outCh] = timecf0;
@@ -1046,7 +1052,8 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 
       //t1065Tree_.sigmoidTime[outCh] = timesigmoid;
       //t1065Tree_.fullFitTime[outCh] = timefullfit;
-      //t1065Tree_.constantThresholdTime[outCh] = ConstantThresholdTime( pulse, 50);
+      //t1065Tree_.constantThresholdTime[outCh] = ConstantThresholdTime( pulse, 50.0);
+      t1065Tree_.constantThresholdTime[outCh] = timeconsthresh; 
       
   }
 	
