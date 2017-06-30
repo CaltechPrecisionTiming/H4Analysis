@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++1y -fPIC
 SOFLAGS = -shared -O3
-INCLUDE = -I"./" 
+INCLUDE = -I"./"
 LIB = -L"./lib/" -L"./DynamicTTree/lib" -L"./CfgManager/lib" -Wl,-rpath=lib/:DynamicTTree/lib/:CfgManager/lib/ -lDTT 
 
 ROOT_LIB := `root-config --libs --glibs`
@@ -9,16 +9,16 @@ ROOT_FLAGS := `root-config --cflags --ldflags` -lMathCore -lMathMore
 
 DEPS = Makefile DynamicTTree/interface/DynamicTTreeBase.h DynamicTTree/interface/DynamicTTreeInterface.h \
 	CfgManager/interface/CfgManager.h CfgManager/interface/CfgManagerT.h \
-	interface/WFClass.h
+	interface/WFClass.h interface/Aux.h
 DEPS_OBJS = lib/utils.o lib/WFClass.o lib/WFClassNINO.o lib/FFTClass.o lib/WFViewer.o lib/MCPAnalyzer.o \
-	lib/H4Tree.o lib/RecoTree.o lib/DigiTree.o lib/WFTree.o lib/PositionTree.o lib/PluginBase.o lib/H4Dict.so lib/T1065Tree.o
+	lib/H4Tree.o lib/RecoTree.o lib/DigiTree.o lib/WFTree.o lib/PositionTree.o lib/PluginBase.o lib/H4Dict.so lib/T1065Tree.o lib/Aux.o lib/Config.o
 PLUG_DEPS = lib/PluginBase.o
 PLUG_OBJS = lib/libDigitizerReco.so lib/libMakeCovarianceMatrix.so \
 	lib/libHodoReco.so lib/libHodoBTFReco.so lib/libWireChamberReco.so \
 	lib/libInfoTreeMaker.so lib/libADCReco.so lib/libWFAnalyzer.so lib/libFFTAnalyzer.so lib/libT1065Reco.so
 DICT_OBJS = lib/WFViewer.o lib/MCPAnalyzer.o
 
-MAIN = bin/H4Reco bin/TemplatesMaker 
+MAIN = bin/H4Reco bin/TemplatesMaker bin/Rereco bin/SkimTree
 
 all: dynamicTree cfgManager $(DEPS_OBJS) $(PLUG_OBJS) $(MAIN) lib/LinkDef.cxx 
 
@@ -38,7 +38,7 @@ lib/H4Dict.so: lib/LinkDef.cxx $(DICT_OBJS)
 	@echo " CXX $<"
 	@$ $(CXX) $(CXXFLAGS) $(SOFLAGS) -o $@ $^ $(INCLUDE) $(ROOT_LIB) $(ROOT_FLAGS) $(LIB)
 
-bin/%: main/%.cpp $(DEPS_OBJS) interface/PluginLoader.h CfgManager/lib/CfgManagerDict.so
+bin/%: main/%.cpp $(DEPS_OBJS) interface/PluginLoader.h CfgManager/lib/CfgManagerDict.so 
 	@echo " CXX $<"
 	@$ $(CXX) $(CXXFLAGS) -ldl -o $@ $^ $(INCLUDE) $(ROOT_LIB) $(ROOT_FLAGS) $(LIB)
 
