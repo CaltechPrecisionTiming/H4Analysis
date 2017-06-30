@@ -162,6 +162,7 @@ int main(int argc, char **argv) {
   float xminRestricted[36]; //location of peak restricted near to channel 0 reference
   float base[36]; // baseline voltage
   float amp[36]; // pulse amplitude
+  float amp_inverse[36]; // pulse amplitude
   float ampRestricted[36]; // pulse amplitude within a restricted window near channel 0 reference
   float integral[36]; // integral in a window
   float integralFull[36]; // integral over all bins
@@ -196,6 +197,7 @@ int main(int argc, char **argv) {
   tree->Branch("xmin", xmin, "xmin[36]/F");
   tree->Branch("xminRestricted", xminRestricted, "xminRestricted[36]/F");
   tree->Branch("amp", amp, "amp[36]/F");
+  tree->Branch("amp_inverse", amp_inverse, "amp_inverse[36]/F");
   tree->Branch("ampRestricted", ampRestricted, "ampRestricted[36]/F");
   tree->Branch("base", base, "base[36]/F");
   tree->Branch("integral", integral, "integral[36]/F");
@@ -308,6 +310,7 @@ int main(int argc, char **argv) {
 	  xmin[totalIndex] = 0.;
 	  xminRestricted[totalIndex] = 0.;
 	  amp [totalIndex] = 0.;
+	  amp_inverse [totalIndex] = 0.;
 	  ampRestricted [totalIndex] = 0.;
 	  base[totalIndex] = 0.;
 	  integral[totalIndex] = 0.;
@@ -368,10 +371,12 @@ int main(int argc, char **argv) {
 	// or the late time samples to do the baseline fit
 	//std::cout << "---event "  << event << "-------ch#: " << totalIndex << std::endl;
 	int index_min = 0;
+	int index_max = 0;
 	if (isNINO) {
 	  index_min = DigitalFindMin(1024, channel[totalIndex]);
 	} else {
 	  index_min = FindMinAbsolute(1024, channel[totalIndex]); 
+	  index_max = FindInverseMaxAbsolute(1024, channel[totalIndex]); 
 	}
 	int index_min_restricted = index_min;
 	if (totalIndex > 0) {
@@ -400,9 +405,12 @@ int main(int argc, char **argv) {
       
 	//Compute Amplitude : use units V
 	Double_t tmpAmp = 0.0;
+	Double_t tmpAmp_inverse = 0.0;
 	Double_t tmpTime = 0.0;
 	pulse->GetPoint(index_min, tmpTime, tmpAmp);
+	pulse->GetPoint(index_max, tmpTime, tmpAmp_inverse);
 	amp[totalIndex] = tmpAmp * (1.0 / 4096.0); 
+	amp_inverse[totalIndex] = tmpAmp_inverse * (1.0 / 4096.0); 
 	pulse->GetPoint(index_min_restricted, tmpTime, tmpAmp);
 	ampRestricted[totalIndex] = tmpAmp * (1.0 / 4096.0); 
 
@@ -428,7 +436,7 @@ int main(int argc, char **argv) {
 	bool isTrigChannel = false;
 
 	float fs[5]; // constant-fraction fit output
-	float risetime;
+	float risetime_tmp;
 	float fs_falling[6]; // falling exp timestapms
 	float cft_low_range  = 0.30;
 	float cft_high_range = 0.70;
@@ -436,10 +444,10 @@ int main(int argc, char **argv) {
 	  if( drawDebugPulses ) {
 	    if ( xmin[totalIndex] != 0.0 ) {
 	      if (isNINO) {
-		DigitalRisingEdgeFitTime( pulse, index_min, fs, risetime, event, "digitalFit_" + pulseName, true);
+		DigitalRisingEdgeFitTime( pulse, index_min, fs, risetime_tmp, event, "digitalFit_" + pulseName, true);
 	      } else {
 		timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge, pulseName); 
-		RisingEdgeFitTime( pulse, index_min, cft_low_range, cft_high_range, fs, risetime, event, "linearFit_" + pulseName, true );
+		RisingEdgeFitTime( pulse, index_min, cft_low_range, cft_high_range, fs, risetime_tmp, event, "linearFit_" + pulseName, true );
 		//TailFitTime( pulse, index_min, fs_falling, event, "expoFit_" + pulseName, true );
 		//sigmoidTime[totalIndex] = SigmoidTimeFit( pulse, index_min, event, "linearFit_" + pulseName, true );
 		//fullFitTime[totalIndex] = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, true );
@@ -449,10 +457,10 @@ int main(int argc, char **argv) {
 	  else {
 	    if ( xmin[totalIndex] != 0.0 ) {
 	      if (isNINO) {
-		DigitalRisingEdgeFitTime( pulse, index_min, fs, risetime, event, "digitalFit_" + pulseName, false);
+		DigitalRisingEdgeFitTime( pulse, index_min, fs, risetime_tmp, event, "digitalFit_" + pulseName, false);
 	      } else {
 		timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge); 
-		RisingEdgeFitTime( pulse, index_min, cft_low_range, cft_high_range, fs, risetime, event, "linearFit_" + pulseName, false );
+		RisingEdgeFitTime( pulse, index_min, cft_low_range, cft_high_range, fs, risetime_tmp, event, "linearFit_" + pulseName, false );
 		//TailFitTime( pulse, index_min, fs_falling, event, "expoFit_" + pulseName, false );
 		//sigmoidTime[totalIndex] = SigmoidTimeFit( pulse, index_min, event, "linearFit_" + pulseName, false );
 		//fullFitTime[totalIndex] = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, false );
@@ -478,6 +486,7 @@ int main(int argc, char **argv) {
 	// for output tree
 	gauspeak[totalIndex] = timepeak;
 	//risetime is already set implicitly above
+	risetime[totalIndex] = risetime_tmp;
 	linearTime0[totalIndex] = fs[0];
 	linearTime15[totalIndex] = fs[1];
 	linearTime30[totalIndex] = fs[2];

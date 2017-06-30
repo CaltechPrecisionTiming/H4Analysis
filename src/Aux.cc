@@ -135,6 +135,40 @@ int FindMin( int n, short *a) {
   return FindRealMin(n,a);
 }
 
+
+int FindInverseMaxAbsolute( int n, short *a) {
+  
+  if (n <= 0 || !a) return -1;
+  float xmax = a[5];
+  int loc = 0;
+  for  (int i = 5; i < n-10; i++) {
+    if ( a[i] > xmax  && a[i+1] > 0.2*a[i] )  
+      { 
+	xmax = a[i];
+	loc = i;
+      }
+  }
+  return loc;
+}
+
+int FindInverseMaxAbsolute( int n, double *a) {
+  
+  if (n <= 0 || !a) return -1;
+  float xmax = a[5];
+  int loc = 0;
+  for  (int i = 5; i < n-10; i++) {
+    if ( a[i] > xmax  && a[i+1] > 0.2*a[i] )  
+      { 
+	xmax = a[i];
+	loc = i;
+      }
+  }
+  return loc;
+}
+
+
+
+
 int FindMinAbsolute( int n, short *a) {
   
   if (n <= 0 || !a) return -1;

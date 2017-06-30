@@ -28,6 +28,8 @@ void NotchFilter( short* channel, double* filteredCurrent, float* time, double R
 int FindMin( int n, short *a);
 int DigitalFindMin( int n, short *a);
 int FindRealMin( int n, short *a);
+int FindInverseMaxAbsolute( int n, double *a);
+int FindInverseMaxAbsolute( int n, short *a);
 int FindMinAbsolute( int n, double *a);
 int FindMinAbsolute( int n, short *a);
 int FindMinAbsolute( int n, short *a, int leftBoundary, int rightBoundary);
