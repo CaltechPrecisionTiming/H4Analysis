@@ -269,6 +269,34 @@ int FindMinFirstPeakAboveNoise( int n, short *a) {
   return loc;
 }
 
+int DigitalFindMin( int n, short *a) {
+  
+  if (n <= 0 || !a) return -1;
+  float xmin = a[5];
+  int loc = 0;
+  int rise = 0;
+  //for  (int i = 5; i < n-10; i++) {
+  for  (int i = 0; i < n-10; i++) {
+    //std::cout << i << " " << a[i] << std::endl;
+    if (xmin > a[i])  
+      {
+	if (a[i]<-100 && rise==0) {
+	  rise=i;
+	  //std::cout << "rise = " << rise << std::endl;
+	}
+	
+	//std::cout << "lower, " << i << ", " << a[i] << "; " << loc << ", " << xmin << std::endl;
+	if (i-loc>20 && i-rise>50 && rise!=0) break;
+
+	xmin = a[i];
+	loc = i;
+      }
+  }
+  //std::cout << "loc0: " << loc << std::endl;
+  return loc;
+}
+
+
 
 // find the mean time from gaus fit
 float GausFit_MeanTime(TGraphErrors* pulse, const float index_first, const float index_last)
@@ -340,7 +368,7 @@ float RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float
 };
 
 
-void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, int event, TString fname, bool makePlot )
+void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, float &risetime, int event, TString fname, bool makePlot )
 {
   double x_low, x_high;
   double ymax, ydummy;
@@ -366,12 +394,12 @@ void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstam
   double slope = flinear->GetParameter(0);
   double b     = flinear->GetParameter(1);
 
-  tstamp[0] = (0.90*ymax-b)/slope - (0.10*ymax-b)/slope;
-  tstamp[1] = (0.0*ymax-b)/slope;
-  tstamp[2] = (0.15*ymax-b)/slope;
-  tstamp[3] = (0.30*ymax-b)/slope;
-  tstamp[4] = (0.45*ymax-b)/slope;
-  tstamp[5] = (0.60*ymax-b)/slope;
+  risetime = (0.90*ymax-b)/slope - (0.10*ymax-b)/slope;
+  tstamp[0] = (0.0*ymax-b)/slope;
+  tstamp[1] = (0.15*ymax-b)/slope;
+  tstamp[2] = (0.30*ymax-b)/slope;
+  tstamp[3] = (0.45*ymax-b)/slope;
+  tstamp[4] = (0.60*ymax-b)/slope;
   
   TLine* line  = new TLine( tstamp[2], 0, tstamp[2], 1000);
   
@@ -398,7 +426,7 @@ void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstam
 
 
 void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float fitLowEdge, const float fitHighEdge,
-		       float* tstamp, int event, TString fname, bool makePlot )
+		       float* tstamp, float &risetime, int event, TString fname, bool makePlot )
 {
   double x_low, x_high;
   double ymax, ydummy;
@@ -424,12 +452,12 @@ void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float 
   double slope = flinear->GetParameter(0);
   double b     = flinear->GetParameter(1);
 
-  tstamp[0] = (0.90*ymax-b)/slope - (0.10*ymax-b)/slope;
-  tstamp[1] = (0.0*ymax-b)/slope;
-  tstamp[2] = (0.15*ymax-b)/slope;
-  tstamp[3] = (0.30*ymax-b)/slope;
-  tstamp[4] = (0.45*ymax-b)/slope;
-  tstamp[5] = (0.60*ymax-b)/slope;
+  risetime = (0.90*ymax-b)/slope - (0.10*ymax-b)/slope;
+  tstamp[0] = (0.0*ymax-b)/slope;
+  tstamp[1] = (0.15*ymax-b)/slope;
+  tstamp[2] = (0.30*ymax-b)/slope;
+  tstamp[3] = (0.45*ymax-b)/slope;
+  tstamp[4] = (0.60*ymax-b)/slope;
   
   TLine* line  = new TLine( tstamp[2], 0, tstamp[2], 1000);
   
@@ -453,6 +481,80 @@ void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float 
 
   delete flinear;
 };
+
+void DigitalRisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, float &risetime, int event, TString fname, bool makePlot ) {
+  double x_low, x_high, y, dummy;
+  double ymax;
+  pulse->GetPoint(index_min, x_low, ymax);
+
+  double x_tmp, y_tmp;
+  for (int i=0; i<1024; i++) {
+    pulse->GetPoint(i, x_tmp, y_tmp);
+  }
+
+  for ( int i = 1; i < 600; i++ )
+    {
+      pulse->GetPoint(index_min-i, x_low, y);
+
+      if ( y < 0.05*ymax ) break;
+    }
+
+  for ( int i = 1; i < 600; i++ )
+    {
+      pulse->GetPoint(index_min-i, x_high, y);
+      if ( y < 0.95*ymax ) break;
+    }
+  pulse->GetPoint(index_min, dummy, y);
+
+  TF1* flinear = new TF1("flinear","[0]*x+[1]", x_low, x_high );
+  float max = -9999;
+  double* yy = pulse->GetY();
+  
+  for ( int i = 0; i < 1024; i++ )
+    {
+      if ( yy[i] > max ) max = yy[i];
+    }
+
+  pulse->Fit("flinear","Q","", x_low, x_high );
+  double slope = flinear->GetParameter(0);
+  double b     = flinear->GetParameter(1);
+  
+  if ( makePlot )
+    {
+      std::cout << "make plot" << std::endl;
+      TCanvas* c = new TCanvas("canvas","canvas",800,400) ;
+      pulse->GetXaxis()->SetLimits(x_low-100, x_high+100);
+      pulse->SetMarkerSize(0.3);
+      pulse->SetMarkerStyle(20);
+      pulse->Draw("AP");
+      c->SaveAs(fname+"LinearFit.pdf");
+      //delete c;
+    }
+  if (slope<=0) {
+
+    tstamp[0]=1000;
+    tstamp[1]=1000;
+    tstamp[2]=1000;
+    tstamp[3]=1000;
+    tstamp[4]=1000;
+    risetime =1000;
+    //std::cout << "!!!!!! problem: " << slope << ", " << risetime << std::endl;
+  }
+  else {
+   //use fixed thresholds for digital pulses
+    tstamp[0] = (25-b)/slope;
+    tstamp[1] = (100-b)/slope;
+    tstamp[2] = (200-b)/slope;
+    tstamp[3] = (300-b)/slope;
+    tstamp[4] = (400-b)/slope;
+    //if (slope != 0) {
+    risetime = (0.90*y-b)/slope - (0.10*y-b)/slope;
+    //}
+  }
+ 
+  delete flinear;
+};
+
 
 
 void TailFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, int event, TString fname, bool makePlot )

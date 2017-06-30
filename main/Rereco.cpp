@@ -297,7 +297,8 @@ int main(int argc, char **argv) {
       for(int i = 0; i < 9; i++) {
 	
 	totalIndex = realGroup[group]*9 + i;
-        
+	bool isNINO = (totalIndex >= 7 && totalIndex <= 12);
+
 	// Do not analyze disabled channels
 	if ( !config.hasChannel(totalIndex) ) {
 	  for ( int j = 0; j < 1024; j++ ) {
@@ -366,7 +367,12 @@ int main(int argc, char **argv) {
 	// to decide if we'll use the early time samples
 	// or the late time samples to do the baseline fit
 	//std::cout << "---event "  << event << "-------ch#: " << totalIndex << std::endl;
-	int index_min = FindMinAbsolute(1024, channel[totalIndex]); 
+	int index_min = 0;
+	if (isNINO) {
+	  index_min = DigitalFindMin(1024, channel[totalIndex]);
+	} else {
+	  index_min = FindMinAbsolute(1024, channel[totalIndex]); 
+	}
 	int index_min_restricted = index_min;
 	if (totalIndex > 0) {
 	  index_min_restricted = FindMinAbsolute(1024, channel[totalIndex], xmin[0] , xmin[0] + 40 );	
@@ -419,29 +425,38 @@ int main(int argc, char **argv) {
 	pulse->GetPoint(index_min+4, high_edge, y);  // time of the upper edge of the fit range	
 
 	float timepeak   = 0;
-	bool isTrigChannel = ( totalIndex == 8 || totalIndex == 17 
-			       || totalIndex == 26 || totalIndex == 35 );
-	float fs[6]; // constant-fraction fit output
+	bool isTrigChannel = false;
+
+	float fs[5]; // constant-fraction fit output
+	float risetime;
 	float fs_falling[6]; // falling exp timestapms
 	float cft_low_range  = 0.30;
 	float cft_high_range = 0.70;
 	if ( !isTrigChannel ) {
 	  if( drawDebugPulses ) {
 	    if ( xmin[totalIndex] != 0.0 ) {
-	      timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge, pulseName); 
-	      RisingEdgeFitTime( pulse, index_min, cft_low_range, cft_high_range, fs, event, "linearFit_" + pulseName, true );
-	      //TailFitTime( pulse, index_min, fs_falling, event, "expoFit_" + pulseName, true );
-	      //sigmoidTime[totalIndex] = SigmoidTimeFit( pulse, index_min, event, "linearFit_" + pulseName, true );
-	      //fullFitTime[totalIndex] = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, true );
+	      if (isNINO) {
+		DigitalRisingEdgeFitTime( pulse, index_min, fs, risetime, event, "digitalFit_" + pulseName, true);
+	      } else {
+		timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge, pulseName); 
+		RisingEdgeFitTime( pulse, index_min, cft_low_range, cft_high_range, fs, risetime, event, "linearFit_" + pulseName, true );
+		//TailFitTime( pulse, index_min, fs_falling, event, "expoFit_" + pulseName, true );
+		//sigmoidTime[totalIndex] = SigmoidTimeFit( pulse, index_min, event, "linearFit_" + pulseName, true );
+		//fullFitTime[totalIndex] = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, true );
+	      }
 	    }
 	  }
 	  else {
 	    if ( xmin[totalIndex] != 0.0 ) {
-	      timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge); 
-	      RisingEdgeFitTime( pulse, index_min, cft_low_range, cft_high_range, fs, event, "linearFit_" + pulseName, false );
-	      //TailFitTime( pulse, index_min, fs_falling, event, "expoFit_" + pulseName, false );
-	      //sigmoidTime[totalIndex] = SigmoidTimeFit( pulse, index_min, event, "linearFit_" + pulseName, false );
-	      //fullFitTime[totalIndex] = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, false );
+	      if (isNINO) {
+		DigitalRisingEdgeFitTime( pulse, index_min, fs, risetime, event, "digitalFit_" + pulseName, false);
+	      } else {
+		timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge); 
+		RisingEdgeFitTime( pulse, index_min, cft_low_range, cft_high_range, fs, risetime, event, "linearFit_" + pulseName, false );
+		//TailFitTime( pulse, index_min, fs_falling, event, "expoFit_" + pulseName, false );
+		//sigmoidTime[totalIndex] = SigmoidTimeFit( pulse, index_min, event, "linearFit_" + pulseName, false );
+		//fullFitTime[totalIndex] = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, false );
+	      }
 	    }
 	  }
 	}
@@ -462,14 +477,18 @@ int main(int argc, char **argv) {
 			
 	// for output tree
 	gauspeak[totalIndex] = timepeak;
-	risetime[totalIndex] = fs[0];
-	linearTime0[totalIndex] = fs[1];
-	linearTime15[totalIndex] = fs[2];
-	linearTime30[totalIndex] = fs[3];
-	linearTime45[totalIndex] = fs[4];
-	linearTime60[totalIndex] = fs[5];
+	//risetime is already set implicitly above
+	linearTime0[totalIndex] = fs[0];
+	linearTime15[totalIndex] = fs[1];
+	linearTime30[totalIndex] = fs[2];
+	linearTime45[totalIndex] = fs[3];
+	linearTime60[totalIndex] = fs[4];
 	fallingTime[totalIndex] = fs_falling[0];
-	constantThresholdTime[totalIndex] = ConstantThresholdTime( pulse, 50);
+	if (isNINO) {
+	  constantThresholdTime[totalIndex] = ConstantThresholdTime( pulse, 300);
+	} else {
+	  constantThresholdTime[totalIndex] = ConstantThresholdTime( pulse, 50);
+	}
 
 	delete pulse;
       } //loop over channels per group    
