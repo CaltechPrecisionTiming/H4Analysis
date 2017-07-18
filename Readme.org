@@ -27,14 +27,14 @@ you might need to edit the cfg file properly such as the path2data (the input fi
 
 First, in your config file you are using (in cfg directory), you need to change the line of path2data to:
 
-path2data /tmp/H4Analysis_tmp/
+=path2data /tmp/H4Analysis_tmp/=
 
 
 then:
 
-cd scripts
+=cd scripts=
 
-python submitBatch_v4.py -r=list_HGC_Nov.list -s=root://eoscms//eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/ntuples_v7/jobs/ -v=v7_Jan10 -c=../cfg/H4_t1065_test_batch.cfg -q=1nd --nf=1 --inputDir=/eos/cms/store/group/phys_susy/razor/Timing/Jun2017CERN/DataTree/
+=python submitBatch_v4.py -r=list_HGC_Nov.list -s=root://eoscms//eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/ntuples_v7/jobs/ -v=v7_Jan10 -c=../cfg/H4_t1065_test_batch.cfg -q=1nd --nf=1 --inputDir=/eos/cms/store/group/phys_susy/razor/Timing/Jun2017CERN/DataTree/=
 
 where:
 
