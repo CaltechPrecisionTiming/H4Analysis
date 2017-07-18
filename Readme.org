@@ -34,7 +34,7 @@ then:
 
 =cd scripts=
 
-=python submitBatch_v4.py -r=list_HGC_Nov.list -s=root://eoscms//eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/ntuples_v7/jobs/ -v=v7_Jan10 -c=../cfg/H4_t1065_test_batch.cfg -q=1nd --nf=1 --inputDir=/eos/cms/store/group/phys_susy/razor/Timing/Jun2017CERN/DataTree/=
+python submitBatch_v4.py -r=list_HGC_Nov.list -s=root://eoscms//eos/cms/store/group/phys_susy/razor/Timing/Nov2016CERN/ntuples_v7/jobs/ -v=v7_Jan10 -c=../cfg/H4_t1065_test_batch.cfg -q=1nd --nf=1 --inputDir=/eos/cms/store/group/phys_susy/razor/Timing/Jun2017CERN/DataTree/
 
 where:
 
