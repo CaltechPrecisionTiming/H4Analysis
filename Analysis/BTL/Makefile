@@ -9,7 +9,7 @@ LDFLAGS := $(shell root-config --glibs)
 CPPFLAGS += -g -std=c++14
 
 TARGET = BTL_Analysis
-SRC = BTL_Analysis.cc pulse.cc
+SRC = BTL_Analysis.cc pulse.cc pulse_Jun2017H4.cc
 
 
 OBJ = $(SRC:.cc=.o)
