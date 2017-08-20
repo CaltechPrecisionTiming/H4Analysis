@@ -180,6 +180,10 @@ int main(int argc, char **argv) {
   float constantThresholdTime[36];
   bool _isRinging[36];
 
+  float	hodoX[2]; 
+  float	hodoY[2]; 
+  int nFibresOnX[2];
+  int nFibresOnY[2];
   float TDCx;
   float TDCy;
   float xSlope;
@@ -214,6 +218,11 @@ int main(int argc, char **argv) {
   tree->Branch("risetime", risetime, "risetime[36]/F");
   tree->Branch("constantThresholdTime", constantThresholdTime, "constantThresholdTime[36]/F");
   tree->Branch("isRinging", _isRinging, "isRinging[36]/O");  
+  tree->Branch("hodoX", hodoX, "hodoX[2]/F");
+  tree->Branch("hodoY", hodoY, "hodoY[2]/F");
+  tree->Branch("nFibresOnX", nFibresOnX, "nFibresOnX[2]/F");
+  tree->Branch("nFibresOnY", nFibresOnY, "nFibresOnY[2]/F");
+
   tree->Branch("TDCx", &TDCx, "TDCx/F");
   tree->Branch("TDCx", &TDCy, "TDCy/F");
   tree->Branch("xSlope", &xSlope, "xSlope/F");
@@ -235,6 +244,7 @@ int main(int argc, char **argv) {
   FILE *fpin = 0;
   TFile *rootInput = 0;
   TTree *rootInputTree = 0;
+  TTree *rootInputTree_hodo = 0;
   
 
   int nGoodEvents = 0;
@@ -242,11 +252,17 @@ int main(int argc, char **argv) {
   // Set according to if dat type or root type
   rootInput = new TFile( inputFilename.c_str() );
   rootInputTree = (TTree *)rootInput->Get("t1065");
+  rootInputTree_hodo = (TTree *)rootInput->Get("hodo");
   
   rootInputTree->SetBranchAddress("event", &event);    
   rootInputTree->SetBranchAddress("time", time);    
   rootInputTree->SetBranchAddress("raw", channel);
   //rootInputTree->SetBranchAddress("base", base);
+  rootInputTree_hodo->SetBranchAddress("X", hodoX);
+  rootInputTree_hodo->SetBranchAddress("Y", hodoY);
+  rootInputTree_hodo->SetBranchAddress("nFibresOnX", nFibresOnX);
+  rootInputTree_hodo->SetBranchAddress("nFibresOnY", nFibresOnY);
+
   rootInputTree->SetBranchAddress("TDCx", &TDCx);
   rootInputTree->SetBranchAddress("TDCy", &TDCy);
   
@@ -273,6 +289,7 @@ int main(int argc, char **argv) {
     }
     
     rootInputTree->GetEntry(iEvent);
+    rootInputTree_hodo->GetEntry(iEvent);
 
     // get number of active groups
     int activeGroupsN = 0;

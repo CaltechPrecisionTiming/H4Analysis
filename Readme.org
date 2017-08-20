@@ -51,6 +51,13 @@ You can also add a parameter “--inputDir=” for the directory of the input fi
 
 *************************************************************
 
+* How to run Rereco code
+
+The rereco is based the ntuple you obtained above (by t1065 tuplizer); the example command to run it is:
+
+=bin/Rereco /eos/cms/store/group/phys_susy/razor/Timing/Jun2017CERN/ntuples/analysis_7907.root /eos/cms/store/group/phys_susy/razor/Timing/Jun2017CERN/ntuples/analysis_7907_rereco.root -1 --config=cfg/RerecoConfig_BTL_06282017.config=
+
+*************************************************************
 * Some Notes:
   - This repository aims to provide a fast reconstruction of data
     acquired with the H4DAQ mainly with the CAEN V1742 Digitizer
