@@ -29,7 +29,7 @@ void Config::parseConfigLine(std::string line) {
     ss.str(line);
     std::string item;
     
-    try {
+//    try {
         // channel number (and check for commented line)
         int chNum = -1;
         nextConfigElement(ss, item);
@@ -91,11 +91,12 @@ void Config::parseConfigLine(std::string line) {
             std::cout << "Config: will apply Weierstrass transform with filter width " 
                 << width << " to channel " << chNum << std::endl;
         }
-    }
-    catch (std::invalid_argument) {
+//    }
+/*    catch (std::invalid_argument) {
         std::cerr << "Illegal parameter found in config!  Configuration is not valid." << std::endl;
         _isValid = false;
     }
+*/
 }
 
 float Config::dBToAmplitudeRatio(float dB) {
