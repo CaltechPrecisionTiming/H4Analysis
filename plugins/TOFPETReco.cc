@@ -43,10 +43,10 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
 	    recoTree_.z[i] = -999;
 	    recoTree_.xi[i] = -999;
 	    recoTree_.yi[i] = -999;
-	    recoTree_.t_h4daq[i] = 9999;
 	    recoTree_.t_tofpet[i] = 0;
     }
     recoTree_.isMatched = false;
+    recoTree_.t_h4daq = 9999;
 
     double h4daq_time = -1;
     for(int iT=0; iT<h4Tree.nEvtTimes; ++iT)
@@ -103,6 +103,8 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
 
     recoTree_.isMatched = true;
 
+    recoTree_.t_h4daq = h4daq_time;
+
     while(abs(rawTree_->time/1e6 - tofpet_rawtime)<0.1)
     {
 	if(rawTree_->channelID < MAX_TOFPET_CHANNEL)
@@ -117,7 +119,6 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
         	recoTree_.z[rawTree_->channelID] = rawTree_->z;
         	recoTree_.xi[rawTree_->channelID] = rawTree_->xi;
         	recoTree_.yi[rawTree_->channelID] = rawTree_->yi;
-        	recoTree_.t_h4daq[rawTree_->channelID] = h4daq_time;
         	recoTree_.t_tofpet[rawTree_->channelID] = tofpet_time;
         	matched = true;
         	rawTree_->NextEntry();

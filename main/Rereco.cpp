@@ -192,6 +192,22 @@ int main(int argc, char **argv) {
   float y1;
   float x2;
   float y2;
+
+  //TOFPET variables
+  bool   tofpet_isMatched;
+  double tofpet_t_sipm[64];
+  double tofpet_tot[64];
+  double tofpet_energy[64];
+  double tofpet_tqT[64];
+  double tofpet_tqE[64];
+  double tofpet_x[64];
+  double tofpet_y[64];
+  double tofpet_z[64];
+  int tofpet_xi[64];
+  int tofpet_yi[64];
+  double tofpet_t_h4daq[64];
+  double tofpet_t_tofpet[64];
+
   
   tree->Branch("event", &event, "event/I");
   tree->Branch("tc", tc, "tc[4]/s");
@@ -230,7 +246,21 @@ int main(int argc, char **argv) {
   tree->Branch("x1", &x1, "x1/F");
   tree->Branch("y1", &y1, "y1/F");
   tree->Branch("x2", &x2, "x2/F");
-  tree->Branch("y2", &y2, "y2/F");
+  tree->Branch("x2", &x2, "x2/F");
+  tree->Branch("tofpet_isMatched", &tofpet_isMatched, "tofpet_isMatched/O");
+  tree->Branch("tofpet_t_sipm", tofpet_t_sipm, "tofpet_t_sipm[64]/D");
+  tree->Branch("tofpet_tot", tofpet_tot, "tofpet_tot[64]/D");
+  tree->Branch("tofpet_energy", tofpet_energy, "tofpet_energy[64]/D");
+  tree->Branch("tofpet_tqT", tofpet_tqT, "tofpet_tqT[64]/D");
+  tree->Branch("tofpet_tqE", tofpet_tqE, "tofpet_tqE[64]/D");
+  tree->Branch("tofpet_x", tofpet_x, "tofpet_x[64]/D");
+  tree->Branch("tofpet_y", tofpet_y, "tofpet_y[64]/D");
+  tree->Branch("tofpet_z", tofpet_z, "tofpet_z[64]/D");
+  tree->Branch("tofpet_t_tofpet", tofpet_t_tofpet, "tofpet_t_tofpet[64]/D");
+  tree->Branch("tofpet_t_h4daq", &tofpet_t_h4daq, "tofpet_t_h4daq/D");
+  tree->Branch("tofpet_xi", tofpet_xi, "tofpet_xi[64]/I");
+  tree->Branch("tofpet_yi", tofpet_yi, "tofpet_yi[64]/I");
+
   
   // temp variables for data input
   uint   event_header;
@@ -245,6 +275,7 @@ int main(int argc, char **argv) {
   TFile *rootInput = 0;
   TTree *rootInputTree = 0;
   TTree *rootInputTree_hodo = 0;
+  TTree *rootInputTree_tofpet = 0;
   
 
   int nGoodEvents = 0;
@@ -253,6 +284,7 @@ int main(int argc, char **argv) {
   rootInput = new TFile( inputFilename.c_str() );
   rootInputTree = (TTree *)rootInput->Get("t1065");
   rootInputTree_hodo = (TTree *)rootInput->Get("hodo");
+  rootInputTree_tofpet = (TTree *)rootInput->Get("tofp");
   
   rootInputTree->SetBranchAddress("event", &event);    
   rootInputTree->SetBranchAddress("time", time);    
@@ -270,6 +302,18 @@ int main(int argc, char **argv) {
   rootInputTree->SetBranchAddress("tc", tc);
   
 
+  rootInputTree_tofpet->SetBranchAddress("isMatched", &tofpet_isMatched);
+  rootInputTree_tofpet->SetBranchAddress("tot", tofpet_tot);
+  rootInputTree_tofpet->SetBranchAddress("energy", tofpet_energy);
+  rootInputTree_tofpet->SetBranchAddress("tqT", tofpet_tqT);
+  rootInputTree_tofpet->SetBranchAddress("tqE", tofpet_tqE);
+  rootInputTree_tofpet->SetBranchAddress("x", tofpet_x);
+  rootInputTree_tofpet->SetBranchAddress("y", tofpet_y);
+  rootInputTree_tofpet->SetBranchAddress("z", tofpet_z);
+  rootInputTree_tofpet->SetBranchAddress("xi", tofpet_xi);
+  rootInputTree_tofpet->SetBranchAddress("yi", tofpet_yi);
+  rootInputTree_tofpet->SetBranchAddress("t_h4daq", &tofpet_t_h4daq);
+  rootInputTree_tofpet->SetBranchAddress("t_tofpet", tofpet_t_tofpet);
 
   //// Only for dat data type:
 
@@ -290,6 +334,7 @@ int main(int argc, char **argv) {
     
     rootInputTree->GetEntry(iEvent);
     rootInputTree_hodo->GetEntry(iEvent);
+    rootInputTree_tofpet->GetEntry(iEvent);
 
     // get number of active groups
     int activeGroupsN = 0;

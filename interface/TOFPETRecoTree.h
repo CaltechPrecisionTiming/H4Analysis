@@ -35,8 +35,8 @@ public:
     double z[64];
     int xi[64];
     int yi[64];
-    uint64 t_h4daq[64];
-    uint64 t_tofpet[64];
+    double t_h4daq;
+    double t_tofpet[64];
 };
 
 #endif
