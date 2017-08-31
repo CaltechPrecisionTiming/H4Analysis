@@ -148,7 +148,15 @@ int main(int argc, char* argv[])
     {
         vector<string> run(1, argv[2]);
         opts.SetOpt("h4reco.run", run);
+        opts.SetOpt("TOFPET.run", run);
     }
+	
+    if(argc > 3)
+    {
+        vector<string> run2(1, argv[3]);
+        opts.SetOpt("TOFPET.run", run2);
+    }
+	
     string outSuffix = opts.GetOpt<string>("h4reco.outNameSuffix");
     string run = opts.GetOpt<string>("h4reco.run");
     TChain* inTree = new TChain("H4tree");

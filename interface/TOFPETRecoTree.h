@@ -25,11 +25,18 @@ public:
 
     uint64* index;
     bool   isMatched; 
-    double t_sipm[100];
-    double tot[100];
-    double energy[100];
-    uint64 t_h4daq[100];
-    uint64 t_tofpet[100];
+    double t_sipm[64];
+    double tot[64];
+    double energy[64];
+    double tqT[64];
+    double tqE[64];
+    double x[64];
+    double y[64];
+    double z[64];
+    int xi[64];
+    int yi[64];
+    uint64 t_h4daq[64];
+    uint64 t_tofpet[64];
 };
 
 #endif

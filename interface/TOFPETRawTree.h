@@ -20,6 +20,13 @@ using namespace std;
     DATA(int64,               time)            \
     DATA(float,               tot)             \
     DATA(float,               energy)          \
+    DATA(float,               tqT)          \
+    DATA(float,               tqE)          \
+    DATA(float,               x)          \
+    DATA(float,               y)          \
+    DATA(float,               z)          \
+    DATA(int,               xi)          \
+    DATA(int,               yi)          \
 
 #include "DynamicTTree/interface/DynamicTTreeInterface.h"
 
