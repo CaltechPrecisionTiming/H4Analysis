@@ -1,0 +1,119 @@
+#include "TOFPETReco.h"
+
+
+#define MAX_TOFPET_CHANNEL 100 
+
+//**********Utils*************************************************************************
+//----------Begin-------------------------------------------------------------------------
+bool TOFPETReco::Begin(CfgManager& opts, uint64* index)
+{
+    //---inputs---
+    
+    auto fileName = opts.GetOpt<string>(instanceName_+".inputFile");
+    inputFile_ = TFile::Open(fileName.c_str());
+    inputTree_ = (TTree*)inputFile_->Get("data");
+    rawTree_ = new TOFPETRawTree(inputTree_);
+    rawTree_->NextEntry();
+ //   while(rawTree_->channelID != 896)
+//        rawTree_->NextEntry();
+    
+    //---create a reco tree
+    RegisterSharedData(new TTree("tofp", "tofpet_tree"), "tofpet_tree", true);
+    recoTree_ = TOFPETRecoTree(index, (TTree*)data_.back().obj);
+    recoTree_.Init();
+    
+
+    return true;
+}
+
+//----------ProcessEvent------------------------------------------------------------------
+bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& plugins, CfgManager& opts)
+{
+    for(int i=0;i< MAX_TOFPET_CHANNEL; i++)
+    {
+	    recoTree_.t_sipm[i] = 9999;
+	    recoTree_.tot[i] = 9999;
+	    recoTree_.energy[i] = -1;
+	    recoTree_.t_h4daq[i] = 9999;
+	    recoTree_.t_tofpet[i] = 0;
+    }
+    recoTree_.isMatched = false;
+
+    double h4daq_time = -1;
+    for(int iT=0; iT<h4Tree.nEvtTimes; ++iT)
+    { 
+        if(h4daqRefTime_ == -1 && h4Tree.evtTimeBoard[iT] == 16908289)
+            h4daqRefTime_ = h4Tree.evtTime[iT]; 
+        if(h4Tree.evtTimeBoard[iT] == 16908289)
+            h4daq_time = h4Tree.evtTime[iT]-h4daqRefTime_;
+    }
+
+
+    if(tofpetRefTime_ == -1)
+        tofpetRefTime_ = rawTree_->time/1e6;
+    double tofpet_time = rawTree_->time/1e6-tofpetRefTime_;   
+   
+    if(currentSpill_ != h4Tree.spillNumber)
+    {
+        if(fabs(tofpet_time - h4daq_time -spillAdjust_)<100)
+        {
+            currentSpill_ = h4Tree.spillNumber;
+            spillAdjust_ = tofpet_time - h4daq_time;
+	    //cout<<"first event of spill "<<currentSpill_<<"; tofpet_time: "<<tofpet_time<<"  h4daq_time: "<<h4daq_time<<"  spillAdjust: "<<spillAdjust_<<endl;
+        }
+        else
+        {
+	    recoTree_.Fill();
+            return false;                       
+        }
+    }
+    
+    //cout<<"DEBUG TOFPET ProcessEvent 0001 - spillAdjust  "<<spillAdjust_<<endl;
+
+    double tofpet_rawtime = rawTree_->time/1e6;
+    bool matched=false;
+    double time_diff = tofpet_time - h4daq_time - spillAdjust_;
+   
+    while(time_diff <= -50)
+    {
+        rawTree_->NextEntry();
+	tofpet_time = rawTree_->time/1e6-tofpetRefTime_;
+	tofpet_rawtime = rawTree_->time/1e6;
+	time_diff = tofpet_time - h4daq_time - spillAdjust_;
+    }
+ 
+
+    if(time_diff >= 50)
+    {
+    	recoTree_.Fill();
+//	cout<<"NOT matched..."<<endl;
+	return false;
+    }
+    
+//    cout<<"Matched! ... tofpet_time: "<<tofpet_time<<"  h4daq_time: "<<h4daq_time<<endl;
+
+    recoTree_.isMatched = true;
+
+    while(abs(rawTree_->time/1e6 - tofpet_rawtime)<0.1)
+    {
+	if(rawTree_->channelID < MAX_TOFPET_CHANNEL)
+	{
+        	recoTree_.t_sipm[rawTree_->channelID] = rawTree_->time;//1-rawTree_->time2;
+        	recoTree_.tot[rawTree_->channelID] = rawTree_->tot;
+        	recoTree_.energy[rawTree_->channelID] = rawTree_->energy;
+        	recoTree_.t_h4daq[rawTree_->channelID] = h4daq_time;
+        	recoTree_.t_tofpet[rawTree_->channelID] = tofpet_time;
+        	matched = true;
+        	rawTree_->NextEntry();
+        }
+	else
+	{
+        	rawTree_->NextEntry();
+	}
+    }
+    
+    	
+    recoTree_.Fill();
+
+    return true;
+}
