@@ -361,7 +361,7 @@ int main(int argc, char **argv) {
       for(int i = 0; i < 9; i++) {
 	
 	totalIndex = realGroup[group]*9 + i;
-	bool isNINO = (totalIndex >= 7 && totalIndex <= 12);
+	bool isNINO = (totalIndex >= 0 && totalIndex <= 5);
 
 	// Do not analyze disabled channels
 	if ( !config.hasChannel(totalIndex) ) {
