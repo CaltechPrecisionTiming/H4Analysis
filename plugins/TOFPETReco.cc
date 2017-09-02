@@ -64,6 +64,18 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
    
     if(currentSpill_ != h4Tree.spillNumber)
     {
+	while(rawTree_->channelID != 0)
+		rawTree_->NextEntry();
+	tofpetRefTime_ = rawTree_->time/1e6;
+	tofpet_time = rawTree_->time/1e6-tofpetRefTime_;
+	for(int iT=0; iT<h4Tree.nEvtTimes; ++iT)
+    	{
+        	if(h4Tree.evtTimeBoard[iT] == 16908289)
+            		h4daqRefTime_ = h4Tree.evtTime[iT];
+        	if(h4Tree.evtTimeBoard[iT] == 16908289)
+            		h4daq_time = h4Tree.evtTime[iT]-h4daqRefTime_; // time shifted to the first triger time
+    	}
+	
         if(fabs(tofpet_time - h4daq_time -spillAdjust_)<100)
         {
             currentSpill_ = h4Tree.spillNumber;
@@ -95,11 +107,11 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
     if(time_diff >= 50)
     {
     	recoTree_.Fill();
-//	cout<<"NOT matched..."<<endl;
+	//cout<<"NOT matched..."<<endl;
 	return false;
     }
     
-//    cout<<"Matched! ... tofpet_time: "<<tofpet_time<<"  h4daq_time: "<<h4daq_time<<endl;
+    //cout<<"Matched! ... tofpet_time: "<<tofpet_time<<"  h4daq_time: "<<h4daq_time<<endl;
 
     recoTree_.isMatched = true;
 
@@ -129,8 +141,8 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
 	}
     }
  
-    while(rawTree_->channelID != 0)
-        rawTree_->NextEntry();
+    //while(rawTree_->channelID != 0)
+    //    rawTree_->NextEntry();
     
     	
     recoTree_.Fill();

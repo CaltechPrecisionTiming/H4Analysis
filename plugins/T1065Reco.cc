@@ -871,7 +871,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 	
     int NSample_t = WFs_[channel]->GetNSample();
     //NSample_t = 1024;//
-    //cout << "NSample: " << NSample_t << "\n";
+    //cout << "channel "<<channel<<"  NSample: " << NSample_t << "\n";
     for(int iSample=0; iSample<1024; iSample++) {
       //t1065Tree_.b_c[ngroup_t][nchannel_t][iSample] = (short)(WFs_[channel]->GetiSample(iSample));
       if(iSample<NSample_t)
