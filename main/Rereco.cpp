@@ -25,7 +25,7 @@ int index_CLOCK = 6;
 int index_MCP0 = 7;
 int index_MCP1 = 14;
 
-int CLOCK_CYCLE = 100; 
+int CLOCK_CYCLE = 25; 
 
 std::string ParseCommandLine( int argc, char* argv[], std::string opt )
 {
@@ -592,26 +592,31 @@ int main(int argc, char **argv) {
     TGraphErrors* pulse_CLOCK = new TGraphErrors( GetTGraph( channel[index_CLOCK], time[realGroup[0]] ) );	
 
     int index_max_MCP0 = 0; Double_t low_edge_MCP0 = 0.; Double_t high_edge_MCP0 = 0.; Double_t y_MCP0 = 0.;
+    int index_min_MCP0 = 0;
     index_max_MCP0 = FindLeftMax(pulse_CLOCK, index_MCP0_Min, CLOCK_CYCLE);
+    index_min_MCP0 = FindLeftMin(pulse_CLOCK, index_MCP0_Min, CLOCK_CYCLE);
     pulse_CLOCK->GetPoint(index_max_MCP0-4, low_edge_MCP0, y_MCP0); // time of the low edge of the fit range
     pulse_CLOCK->GetPoint(index_max_MCP0+4, high_edge_MCP0, y_MCP0);  // time of the upper edge of the fit range 
+
  
     int index_max_MCP1 = 0; Double_t low_edge_MCP1 = 0.; Double_t high_edge_MCP1 = 0.; Double_t y_MCP1 = 0.;
+    int index_min_MCP1 = 0; 
     index_max_MCP1 = FindLeftMax(pulse_CLOCK, index_MCP1_Min, CLOCK_CYCLE);
+    index_min_MCP1 = FindLeftMin(pulse_CLOCK, index_MCP1_Min, CLOCK_CYCLE);
+    if(abs(index_max_MCP1-index_max_MCP0) < CLOCK_CYCLE/2) 
+    {
+	index_max_MCP1 += CLOCK_CYCLE;
+	index_min_MCP1 += CLOCK_CYCLE;
+    }
     pulse_CLOCK->GetPoint(index_max_MCP1-4, low_edge_MCP1, y_MCP1); // time of the low edge of the fit range
     pulse_CLOCK->GetPoint(index_max_MCP1+4, high_edge_MCP1, y_MCP1);  // time of the upper edge of the fit range 
-
-    int index_min_MCP0 = 0;
-    index_min_MCP0 = FindLeftMin(pulse_CLOCK, index_MCP0_Min, CLOCK_CYCLE);
  
-    int index_min_MCP1 = 0; 
-    index_min_MCP1 = FindLeftMin(pulse_CLOCK, index_MCP1_Min, CLOCK_CYCLE);
-    
+ 
     TString pulseName = Form("pulse_event%d_group%d_ch%d", iEvent, 0, index_CLOCK);
     float fs[5];
     float risetime_tmp;
-    float cft_low_range  = 0.10;
-    float cft_high_range = 0.80;
+    float cft_low_range  = 0.30;
+    float cft_high_range = 0.70;
     
     MCPtoClockTime_gauspeak[0] =  GausFit_MeanTime(pulse_CLOCK, low_edge_MCP0, high_edge_MCP0);
     MCPtoClockTime_gauspeak[1] =  GausFit_MeanTime(pulse_CLOCK, low_edge_MCP1, high_edge_MCP1);

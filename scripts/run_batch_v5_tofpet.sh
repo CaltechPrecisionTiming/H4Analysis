@@ -1,0 +1,1 @@
+python submitBatch_v5_tofpet.py -r=list_tofpet_082017.list -s=/eos/cms/store/group/phys_susy/razor/Timing/Aug2017CERN/ntuples/ -v=v1 -c=../cfg/H6_2017_08_MTD_job.cfg -q=cmscaf1nd --nf=1 --inputDir=/eos/cms/store/group/phys_susy/razor/Timing/Aug2017CERN/DataTree/
