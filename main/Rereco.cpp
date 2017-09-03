@@ -25,6 +25,7 @@ int index_CLOCK = 6;
 int index_MCP0 = 7;
 int index_MCP1 = 14;
 
+int CLOCK_CYCLE = 100; 
 
 std::string ParseCommandLine( int argc, char* argv[], std::string opt )
 {
@@ -257,7 +258,7 @@ int main(int argc, char **argv) {
   tree->Branch("nFibresOnY", nFibresOnY, "nFibresOnY[2]/F");
 
   tree->Branch("TDCx", &TDCx, "TDCx/F");
-  tree->Branch("TDCx", &TDCy, "TDCy/F");
+  tree->Branch("TDCy", &TDCy, "TDCy/F");
   tree->Branch("xSlope", &xSlope, "xSlope/F");
   tree->Branch("ySlope", &ySlope, "ySlope/F");
   tree->Branch("x1", &x1, "x1/F");
@@ -591,32 +592,38 @@ int main(int argc, char **argv) {
     TGraphErrors* pulse_CLOCK = new TGraphErrors( GetTGraph( channel[index_CLOCK], time[realGroup[0]] ) );	
 
     int index_max_MCP0 = 0; Double_t low_edge_MCP0 = 0.; Double_t high_edge_MCP0 = 0.; Double_t y_MCP0 = 0.;
-    index_max_MCP0 = FindLeftMax(pulse_CLOCK, index_MCP0_Min);
+    index_max_MCP0 = FindLeftMax(pulse_CLOCK, index_MCP0_Min, CLOCK_CYCLE);
     pulse_CLOCK->GetPoint(index_max_MCP0-4, low_edge_MCP0, y_MCP0); // time of the low edge of the fit range
     pulse_CLOCK->GetPoint(index_max_MCP0+4, high_edge_MCP0, y_MCP0);  // time of the upper edge of the fit range 
  
     int index_max_MCP1 = 0; Double_t low_edge_MCP1 = 0.; Double_t high_edge_MCP1 = 0.; Double_t y_MCP1 = 0.;
-    index_max_MCP1 = FindLeftMax(pulse_CLOCK, index_MCP1_Min);
+    index_max_MCP1 = FindLeftMax(pulse_CLOCK, index_MCP1_Min, CLOCK_CYCLE);
     pulse_CLOCK->GetPoint(index_max_MCP1-4, low_edge_MCP1, y_MCP1); // time of the low edge of the fit range
     pulse_CLOCK->GetPoint(index_max_MCP1+4, high_edge_MCP1, y_MCP1);  // time of the upper edge of the fit range 
+
+    int index_min_MCP0 = 0;
+    index_min_MCP0 = FindLeftMin(pulse_CLOCK, index_MCP0_Min, CLOCK_CYCLE);
+ 
+    int index_min_MCP1 = 0; 
+    index_min_MCP1 = FindLeftMin(pulse_CLOCK, index_MCP1_Min, CLOCK_CYCLE);
     
     TString pulseName = Form("pulse_event%d_group%d_ch%d", iEvent, 0, index_CLOCK);
     float fs[5];
     float risetime_tmp;
-    float cft_low_range  = 0.30;
-    float cft_high_range = 0.70;
+    float cft_low_range  = 0.10;
+    float cft_high_range = 0.80;
     
     MCPtoClockTime_gauspeak[0] =  GausFit_MeanTime(pulse_CLOCK, low_edge_MCP0, high_edge_MCP0);
     MCPtoClockTime_gauspeak[1] =  GausFit_MeanTime(pulse_CLOCK, low_edge_MCP1, high_edge_MCP1);
 
-    RisingEdgeFitTimeCLOCK( pulse_CLOCK, index_max_MCP0, cft_low_range, cft_high_range, fs, risetime_tmp, event, "linearFit_" + pulseName, false, 25 );
+    RisingEdgeFitTimeCLOCK( pulse_CLOCK, index_max_MCP0, index_min_MCP0, cft_low_range, cft_high_range, fs, risetime_tmp, event, "linearFit_" + pulseName, false, CLOCK_CYCLE );
     MCPtoClockTime_linearTime0[0] = fs[0];
     MCPtoClockTime_linearTime15[0] = fs[1];
     MCPtoClockTime_linearTime30[0] = fs[2];
     MCPtoClockTime_linearTime45[0] = fs[3];
     MCPtoClockTime_linearTime60[0] = fs[4];
 
-    RisingEdgeFitTimeCLOCK( pulse_CLOCK, index_max_MCP1, cft_low_range, cft_high_range, fs, risetime_tmp, event, "linearFit_" + pulseName, false, 25 );
+    RisingEdgeFitTimeCLOCK( pulse_CLOCK, index_max_MCP1, index_min_MCP0, cft_low_range, cft_high_range, fs, risetime_tmp, event, "linearFit_" + pulseName, false, CLOCK_CYCLE );
     MCPtoClockTime_linearTime0[1] = fs[0];
     MCPtoClockTime_linearTime15[1] = fs[1];
     MCPtoClockTime_linearTime30[1] = fs[2];

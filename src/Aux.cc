@@ -331,20 +331,20 @@ int DigitalFindMin( int n, short *a) {
 }
 
 
-int FindLeftMax(TGraphErrors * pulse, int loc)
+int FindLeftMax(TGraphErrors * pulse, int loc, int clockWidth )
 {
 	int ind_max = 0;
 	double x_max = 0;
 	double y_max = -999999;
 	double x_loc, y_loc;
 	pulse->GetPoint(loc,x_loc,y_loc);
-	for(int ind_this = loc;ind_this>=loc-25;ind_this--)
+	for(int ind_this = loc;ind_this>=loc-clockWidth;ind_this--)
         {
 		double x_right, y_right, x_left, y_left, x_this, y_this;
 		pulse->GetPoint(ind_this+1, x_right, y_right);
 		pulse->GetPoint(ind_this-1, x_left, y_left);
 		pulse->GetPoint(ind_this, x_this, y_this);
-		if(y_this > y_max && y_this > 100)
+		if(y_this > y_max)
 		{
 			x_max = x_this;
 			ind_max = ind_this;
@@ -355,6 +355,34 @@ int FindLeftMax(TGraphErrors * pulse, int loc)
 	}
 	return ind_max;
 }
+
+int FindLeftMin(TGraphErrors * pulse, int loc, int clockWidth )
+{
+	int ind_min = 0;
+	double x_min = 0;
+	double y_min = -999999;
+	double x_loc, y_loc;
+	pulse->GetPoint(loc,x_loc,y_loc);
+        int ind_max = FindLeftMax(pulse, loc, clockWidth );
+
+	for(int ind_this = ind_max;ind_this>=ind_max-clockWidth;ind_this--)
+        {
+		double x_right, y_right, x_left, y_left, x_this, y_this;
+		pulse->GetPoint(ind_this+1, x_right, y_right);
+		pulse->GetPoint(ind_this-1, x_left, y_left);
+		pulse->GetPoint(ind_this, x_this, y_this);
+		if(y_this < y_min)
+		{
+			x_min = x_this;
+			ind_min = ind_this;
+			y_min = y_this;
+		}
+		//if(y_this < -100 && x_min < x_loc ) break;
+		
+	}
+	return ind_min;
+}
+
 
 
 // find the mean time from gaus fit
@@ -541,22 +569,23 @@ void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float 
   delete flinear;
 };
 
-void RisingEdgeFitTimeCLOCK(TGraphErrors * pulse, const float index_max, const float fitLowEdge, const float fitHighEdge,
+void RisingEdgeFitTimeCLOCK(TGraphErrors * pulse, const float index_max, const float index_min, const float fitLowEdge, const float fitHighEdge,
 		       float* tstamp, float &risetime, int event, TString fname, bool makePlot, int clockWidth)
 {
   double x_low, x_high;
-  double ymax, ydummy;
+  double ymax, ydummy, ymin;
   pulse->GetPoint(index_max, x_high, ymax);
+  pulse->GetPoint(index_min, x_low, ymin);
 
   for ( int i = index_max - int(clockWidth/2); i < index_max; i++ )
     {
       pulse->GetPoint(i, x_low, ydummy);
-      if ( ydummy > fitLowEdge*ymax ) break;
+      if ( ydummy-ymin > fitLowEdge*(ymax-ymin) ) break;
     }
   for ( int i = index_max - int(clockWidth/2); i < index_max; i++ )
     {
       pulse->GetPoint(i, x_high, ydummy);
-      if ( ydummy > fitHighEdge*ymax ) break;
+      if ( ydummy-ymin > fitHighEdge*(ymax-ymin) ) break;
     }
 
   
@@ -569,12 +598,12 @@ void RisingEdgeFitTimeCLOCK(TGraphErrors * pulse, const float index_max, const f
   double slope = flinear->GetParameter(0);
   double b     = flinear->GetParameter(1);
 
-  risetime = (0.90*ymax-b)/slope - (0.10*ymax-b)/slope;
-  tstamp[0] = (0.0*ymax-b)/slope;
-  tstamp[1] = (0.15*ymax-b)/slope;
-  tstamp[2] = (0.30*ymax-b)/slope;
-  tstamp[3] = (0.45*ymax-b)/slope;
-  tstamp[4] = (0.60*ymax-b)/slope;
+  risetime = (0.90*(ymax-ymin)-b)/slope - (0.10*(ymax-ymin)-b)/slope;
+  tstamp[0] = (0.0*(ymax-ymin)-b)/slope;
+  tstamp[1] = (0.15*(ymax-ymin)-b)/slope;
+  tstamp[2] = (0.30*(ymax-ymin)-b)/slope;
+  tstamp[3] = (0.45*(ymax-ymin)-b)/slope;
+  tstamp[4] = (0.60*(ymax-ymin)-b)/slope;
   
   TLine* line  = new TLine( tstamp[2], 0, tstamp[2], 1000);
   

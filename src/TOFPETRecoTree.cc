@@ -13,7 +13,7 @@ void TOFPETRecoTree::Init()
     tree_->Branch("index", &index, "index/l");
     //---tofpet branches
     tree_->Branch("isMatched", &isMatched, "isMatched/O");
-    tree_->Branch("t_sipm", t_sipm, "t_sipm[64]/D");
+    tree_->Branch("t_sipm", t_sipm, "t_sipm[64]/l");
     tree_->Branch("tot", tot, "tot[64]/D");
     tree_->Branch("energy", energy, "energy[64]/D");        
     tree_->Branch("tqT", tqT, "tqT[64]/D");        
@@ -23,6 +23,9 @@ void TOFPETRecoTree::Init()
     tree_->Branch("z", z, "z[64]/D");        
     tree_->Branch("xi", xi, "xi[64]/I");        
     tree_->Branch("yi", yi, "yi[64]/I");        
+    tree_->Branch("spillNum", &spillNum, "spillNum/I");        
     tree_->Branch("t_h4daq", &t_h4daq, "t_h4daq/D");
+    tree_->Branch("t_totrigger", t_totrigger, "t_totrigger[64]/D");
     tree_->Branch("t_tofpet", t_tofpet, "t_tofpet[64]/D");
+    tree_->Branch("deltaT_h4daq_trigger", &deltaT_h4daq_trigger, "deltaT_h4daq_trigger/D");
 }

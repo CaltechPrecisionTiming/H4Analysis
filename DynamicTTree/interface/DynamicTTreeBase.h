@@ -23,6 +23,8 @@ public:
 
     //---utils---
     bool NextEntry(long int entry=-1);
+    long int getCurrentEntry () {return currentEntry_;};
+    long int getNEntries () {return tree_->GetEntriesFast();};
 
 protected:
     long int currentEntry_;

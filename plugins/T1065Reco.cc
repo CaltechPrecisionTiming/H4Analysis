@@ -912,6 +912,9 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     if (channel.substr(0,4) == "NINO") {
       baseline = DigitalGetBaseline(pulse, 0, 40);
     }
+    else if(channel.substr(0,5) == "CLOCK"){
+      baseline = 1000;
+    }
     else {
       baseline = GetBaseline(pulse, 5, 45);
     }

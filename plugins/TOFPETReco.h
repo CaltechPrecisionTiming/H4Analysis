@@ -2,6 +2,7 @@
 #define __TOFPET_RECO__
 
 #include <iostream>
+#include <vector>
 
 #include "interface/PluginBase.h"
 #include "interface/TOFPETRawTree.h"
@@ -12,8 +13,8 @@ class TOFPETReco: public PluginBase
 public:
     //---ctors---
     TOFPETReco():
-        currentSpill_(-1), spillAdjust_(-1), h4daqRefTime_(-1), tofpetRefTime_(-1)
-        {};
+        currentSpill_(-1), spillAdjust_(-1), h4daqRefTime_(-1), tofpetRefTime_(-1), foundFirstTrigger_(false)
+        {h4daqRefTimes_.clear();};
 
     //---dtor---
     ~TOFPETReco(){};
@@ -30,9 +31,11 @@ private:
     TOFPETRecoTree recoTree_;
     
     int            currentSpill_;
+    bool 	   foundFirstTrigger_;
     double         spillAdjust_;
-    double         h4daqRefTime_;
-    double         tofpetRefTime_;
+    long long int         h4daqRefTime_;
+    vector<long long int>  h4daqRefTimes_;
+    long long int         tofpetRefTime_;
 };
 
 DEFINE_PLUGIN(TOFPETReco);

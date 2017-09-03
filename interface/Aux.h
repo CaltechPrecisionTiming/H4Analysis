@@ -25,7 +25,8 @@ TGraphErrors GetTGraph( short* channel, float* time );
 double GetGaussTime( TGraphErrors* pulse );
 void HighPassFilter( short* channel, double* filteredCurrent, float* time, double R = -1.0, double C = -1.0 );
 void NotchFilter( short* channel, double* filteredCurrent, float* time, double R = -1.0, double C = -1.0, double L = -1.0 );
-int FindLeftMax(TGraphErrors * pulse, int loc);
+int FindLeftMax(TGraphErrors * pulse, int loc, int clockWidth = 25);
+int FindLeftMin(TGraphErrors * pulse, int loc, int clockWidth = 25);
 int FindMin( int n, short *a);
 int DigitalFindMin( int n, short *a);
 int FindRealMin( int n, short *a);
@@ -38,7 +39,7 @@ int FindMinFirstPeakAboveNoise( int n, short *a);
 float GausFit_MeanTime(TGraphErrors * pulse, const float index_first, const float index_last);
 float RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float constantFraction, TString fname, bool makePlot = false );
 void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, float &risetime, int event, TString fname, bool makePlot = false);
-void RisingEdgeFitTimeCLOCK(TGraphErrors * pulse, const float index_max, const float fitLowEdge, const float fitHighEdge,
+void RisingEdgeFitTimeCLOCK(TGraphErrors * pulse, const float index_max, const float index_min, const float fitLowEdge, const float fitHighEdge,
 		       float* tstamp, float &risetime, int event, TString fname, bool makePlot = false, int clockWidth = 25 );
 void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float fitLowEdge, const float fitHighEdge,
 		       float* tstamp, float &risetime, int event, TString fname, bool makePlot = false );

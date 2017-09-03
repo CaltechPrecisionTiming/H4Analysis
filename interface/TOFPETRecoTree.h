@@ -25,7 +25,7 @@ public:
 
     uint64* index;
     bool   isMatched; 
-    double t_sipm[64];
+    long long int t_sipm[64];
     double tot[64];
     double energy[64];
     double tqT[64];
@@ -35,8 +35,11 @@ public:
     double z[64];
     int xi[64];
     int yi[64];
+    int spillNum;
     double t_h4daq;
+    double t_totrigger[64];
     double t_tofpet[64];
+    double deltaT_h4daq_trigger;
 };
 
 #endif

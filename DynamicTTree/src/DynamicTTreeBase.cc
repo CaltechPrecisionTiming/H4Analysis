@@ -18,7 +18,7 @@ bool DynamicTTreeBase::NextEntry(long int entry)
     if(entry > -1)
         currentEntry_ = entry;
 
-    ++currentEntry_;
+    else ++currentEntry_;
     if(currentEntry_ < tree_->GetEntriesFast())
     {
         tree_->GetEntry(currentEntry_);
