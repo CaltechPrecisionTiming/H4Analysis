@@ -62,16 +62,16 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
     bool foundThisTrigger=false;
     double h4daq_time = -1;
     spillAdjust_ = 0;  
-    double time_diff_triggerh4 = rawTree_->time/1e6 - tofpetRefTime_ - h4daq_time;
+    double time_diff_triggerh4 = rawTree_->time - tofpetRefTime_ - h4daq_time;
     double time_diff_triggerh4_best = time_diff_triggerh4;
     long int tofpet_triggerEntry = rawTree_->getCurrentEntry();
-    double tofpet_triggertime = rawTree_->time/1e6;
+    long long int tofpet_triggertime = rawTree_->time;
 
 
     // if the starting event is not a trigger event, shift it to the next trigger event
     while(rawTree_->channelID != TriggerChannelID) rawTree_->NextEntry();
     // if the tofpetRefTime has never been set, then set it to the first trigger
-    if(tofpetRefTime_ == -1) tofpetRefTime_ = rawTree_->time/1e6; 
+    if(tofpetRefTime_ == -1) tofpetRefTime_ = rawTree_->time; 
 
     // get the h4daq time
     for(int iT=0; iT<h4Tree.nEvtTimes; ++iT)
@@ -82,7 +82,7 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
             h4daq_time = h4Tree.evtTime[iT]-h4daqRefTime_; // time shifted to the first triger time
     }
     
-   time_diff_triggerh4 = rawTree_->time/1e6 - tofpetRefTime_ - h4daq_time;
+   time_diff_triggerh4 = rawTree_->time - tofpetRefTime_ - h4daq_time;
    time_diff_triggerh4_best = time_diff_triggerh4;
    tofpet_triggerEntry = rawTree_->getCurrentEntry();
 
@@ -157,7 +157,7 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
 
 	tofpet_triggerEntry = theFirstTriggerIndex;	
 	rawTree_->NextEntry(tofpet_triggerEntry);
-	tofpetRefTime_ = rawTree_->time/1e6;
+	tofpetRefTime_ = rawTree_->time;
     	cout<<", TOFPET first trigger: entry "<<tofpet_triggerEntry<<"  CH "<<rawTree_->channelID<<" h4daqRefTime_ "<<h4daqRefTime_<<"  tofpetRefTime_ "<<tofpetRefTime_<<endl;
     }
 	
@@ -176,11 +176,11 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
 	rawTree_->NextEntry();
     	while(rawTree_->channelID != TriggerChannelID) rawTree_->NextEntry();
 	
-	cout<<"deltaT of the first two triggers: "<<rawTree_->time/1e6 - tofpetRefTime_<<endl;
+	cout<<"deltaT of the first two triggers: "<<rawTree_->time/1e6 - tofpetRefTime_/1e6<<endl;
 
 	for(int ind_h4=0;ind_h4<h4daqRefTimes_.size();ind_h4++)
 	{
-		time_diff_triggerh4 = rawTree_->time/1e6 - tofpetRefTime_ - (this_h4daqtime - h4daqRefTimes_[ind_h4]);
+		time_diff_triggerh4 = rawTree_->time/1e6 - tofpetRefTime_/1e6 - (this_h4daqtime - h4daqRefTimes_[ind_h4]);
 		cout<<"pairing event "<<h4daqRefTimes_.size()<<" with "<<ind_h4<<" deltaT-h4 = "<<this_h4daqtime<<" - "<<h4daqRefTimes_[ind_h4]<<" = "<<this_h4daqtime - h4daqRefTimes_[ind_h4]<<"  deltaT-h4-trigger "<<time_diff_triggerh4<<endl;
 		if(abs(time_diff_triggerh4)<2000) foundFirstTrigger_ = true;
 	}
@@ -190,7 +190,7 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
 		cout<<"trigger paired! first entry in H4DAQ now set: "<<h4daqRefTimes_.size()<<endl;
 		foundFirstTrigger_ = true;
 		//can not go back to the first event, so abandon that one event...
-		tofpetRefTime_ = rawTree_->time/1e6;	
+		tofpetRefTime_ = rawTree_->time;	
 		h4daqRefTime_ = this_h4daqtime;
 		h4daq_time = 0;
 		cout<<"in this spill, tofpetRefTime_ = "<<tofpetRefTime_<<"  h4daqRefTime_ = "<<h4daqRefTime_<<endl;
@@ -217,7 +217,7 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
 
     //if you arrives here, it means that the first trigger is found, and TOFPET and H4DAQ ref times are all set properly
 
-   time_diff_triggerh4 = rawTree_->time/1e6 - tofpetRefTime_ - h4daq_time;
+   time_diff_triggerh4 = rawTree_->time/1e6 - tofpetRefTime_/1e6 - h4daq_time;
    time_diff_triggerh4_best = time_diff_triggerh4;
    tofpet_triggerEntry = rawTree_->getCurrentEntry();
 
@@ -226,32 +226,32 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
     //cout<<"DEBUG TOFPET ProcessEvent - starting entry "<<rawTree_->getCurrentEntry()<<" ID: "<<rawTree_->channelID<<"  time_diff_triggerh4 "<<time_diff_triggerh4<<endl;
 
    //first, find the trigger which is closest to H4DAQ time (within 100000 micro-second window - about 10 triggers)
-	while(rawTree_->time/1e6 - tofpetRefTime_ - h4daq_time > -100000 && rawTree_->getCurrentEntry() > 0) // keep searching to the left, until it reaches 1000 us window
+	while(rawTree_->time/1e6 - tofpetRefTime_/1e6 - h4daq_time > -100000 && rawTree_->getCurrentEntry() > 0) // keep searching to the left, until it reaches 1000 us window
 	{
 		rawTree_->NextEntry(rawTree_->getCurrentEntry() - 1);	
     		while(rawTree_->channelID != TriggerChannelID && rawTree_->getCurrentEntry() > 0) rawTree_->NextEntry(rawTree_->getCurrentEntry() - 1);
-		if(abs(rawTree_->time/1e6 - tofpetRefTime_ - h4daq_time) < abs(time_diff_triggerh4_best) && rawTree_->channelID == TriggerChannelID)
+		if(abs(rawTree_->time/1e6 - tofpetRefTime_/1e6 - h4daq_time) < abs(time_diff_triggerh4_best) && rawTree_->channelID == TriggerChannelID)
 		{
-			time_diff_triggerh4_best = rawTree_->time/1e6 - tofpetRefTime_ - h4daq_time;
+			time_diff_triggerh4_best = rawTree_->time/1e6 - tofpetRefTime_/1e6 - h4daq_time;
 			tofpet_triggerEntry = rawTree_->getCurrentEntry();
 		}
 	}
 
 
-	while(rawTree_->time/1e6 - tofpetRefTime_ - h4daq_time < 100000 && rawTree_->getCurrentEntry() < rawTree_->getNEntries() - 1)
+	while(rawTree_->time/1e6 - tofpetRefTime_/1e6 - h4daq_time < 100000 && rawTree_->getCurrentEntry() < rawTree_->getNEntries() - 1)
 	{
 		rawTree_->NextEntry();	
     		while(rawTree_->channelID != TriggerChannelID && rawTree_->getCurrentEntry() < rawTree_->getNEntries() - 1) rawTree_->NextEntry();
-		if(abs(rawTree_->time/1e6 - tofpetRefTime_ - h4daq_time) < abs(time_diff_triggerh4_best) && rawTree_->channelID == TriggerChannelID)
+		if(abs(rawTree_->time/1e6 - tofpetRefTime_/1e6 - h4daq_time) < abs(time_diff_triggerh4_best) && rawTree_->channelID == TriggerChannelID)
 		{
-			time_diff_triggerh4_best = rawTree_->time/1e6 - tofpetRefTime_ - h4daq_time;
+			time_diff_triggerh4_best = rawTree_->time/1e6 - tofpetRefTime_/1e6 - h4daq_time;
 			tofpet_triggerEntry = rawTree_->getCurrentEntry();
 		}
 
 	} 	
 
     rawTree_->NextEntry(tofpet_triggerEntry);
-    time_diff_triggerh4 = rawTree_->time/1e6 - tofpetRefTime_ - h4daq_time;
+    time_diff_triggerh4 = rawTree_->time/1e6 - tofpetRefTime_/1e6 - h4daq_time;
 
     //if the closest trigger selected is far away from H4DAQ event, this means this trigger is missing
 
@@ -265,14 +265,14 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
     }
 
     // OK, now the trigger is selected...
-    tofpet_triggertime = rawTree_->time/1e6;
+    tofpet_triggertime = rawTree_->time;
 
 
     //then, around this trigger, claim that all the events within a given window is matched
-    while(rawTree_->time/1e6 - tofpet_triggertime > -1.0*matchTriggerWindow) rawTree_->NextEntry(rawTree_->getCurrentEntry() - 1);
+    while(rawTree_->time/1e6 - tofpet_triggertime/1e6 > -1.0*matchTriggerWindow) rawTree_->NextEntry(rawTree_->getCurrentEntry() - 1);
     rawTree_->NextEntry();
  
-    while(rawTree_->time/1e6 - tofpet_triggertime < matchTriggerWindow)
+    while(rawTree_->time/1e6 - tofpet_triggertime/1e6 < matchTriggerWindow)
     {
   	if(rawTree_->channelID != TriggerChannelID) matched = true;	
 	if(rawTree_->channelID < MAX_TOFPET_CHANNEL)
@@ -287,8 +287,8 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
         	recoTree_.z[rawTree_->channelID] = rawTree_->z;
         	recoTree_.xi[rawTree_->channelID] = rawTree_->xi;
         	recoTree_.yi[rawTree_->channelID] = rawTree_->yi;
-        	recoTree_.t_tofpet[rawTree_->channelID] = rawTree_->time/1e6-tofpetRefTime_;
-        	recoTree_.t_totrigger[rawTree_->channelID] = rawTree_->time/1e6- tofpet_triggertime;
+        	recoTree_.t_tofpet[rawTree_->channelID] = rawTree_->time-tofpetRefTime_;
+        	recoTree_.t_totrigger[rawTree_->channelID] = rawTree_->time - tofpet_triggertime;
         }
 	rawTree_->NextEntry();
     } 

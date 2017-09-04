@@ -22,10 +22,12 @@ TStyle* style;
 int graphic_init();
 
 int index_CLOCK = 6;
+int index_CLOCK2 = 5;
 int index_MCP0 = 7;
 int index_MCP1 = 14;
 
-int CLOCK_CYCLE = 25; 
+int CLOCK_CYCLE = 100; 
+int CLOCK2_CYCLE = 25; 
 
 std::string ParseCommandLine( int argc, char* argv[], std::string opt )
 {
@@ -179,6 +181,14 @@ int main(int argc, char **argv) {
   float MCPtoClockTime_linearTime30[2];
   float MCPtoClockTime_linearTime45[2];
   float MCPtoClockTime_linearTime60[2];
+ 
+
+  float MCPtoClock2Time_gauspeak[2];
+  float MCPtoClock2Time_linearTime0[2];
+  float MCPtoClock2Time_linearTime15[2];
+  float MCPtoClock2Time_linearTime30[2];
+  float MCPtoClock2Time_linearTime45[2];
+  float MCPtoClock2Time_linearTime60[2];
   float sigmoidTime[36];//time extracted with sigmoid fit
   float linearTime0[36]; // constant fraction fit coordinates
   float linearTime15[36];
@@ -218,7 +228,8 @@ int main(int argc, char **argv) {
   int tofpet_xi[64];
   int tofpet_yi[64];
   double tofpet_t_h4daq[64];
-  double tofpet_t_tofpet[64];
+  long long int tofpet_t_tofpet[64];
+  long long int tofpet_t_totrigger[64];
 
   
   tree->Branch("event", &event, "event/I");
@@ -241,6 +252,14 @@ int main(int argc, char **argv) {
   tree->Branch("MCPtoClockTime_linearTime30", MCPtoClockTime_linearTime30, "MCPtoClockTime_linearTime30[2]/F");
   tree->Branch("MCPtoClockTime_linearTime45", MCPtoClockTime_linearTime45, "MCPtoClockTime_linearTime45[2]/F");
   tree->Branch("MCPtoClockTime_linearTime60", MCPtoClockTime_linearTime60, "MCPtoClockTime_linearTime60[2]/F");
+  tree->Branch("MCPtoClock2Time_gauspeak", MCPtoClock2Time_gauspeak, "MCPtoClock2Time_gauspeak[2]/F");
+  tree->Branch("MCPtoClock2Time_linearTime0", MCPtoClock2Time_linearTime0, "MCPtoClock2Time_linearTime0[2]/F");
+  tree->Branch("MCPtoClock2Time_linearTime15", MCPtoClock2Time_linearTime15, "MCPtoClock2Time_linearTime15[2]/F");
+  tree->Branch("MCPtoClock2Time_linearTime30", MCPtoClock2Time_linearTime30, "MCPtoClock2Time_linearTime30[2]/F");
+  tree->Branch("MCPtoClock2Time_linearTime45", MCPtoClock2Time_linearTime45, "MCPtoClock2Time_linearTime45[2]/F");
+  tree->Branch("MCPtoClock2Time_linearTime60", MCPtoClock2Time_linearTime60, "MCPtoClock2Time_linearTime60[2]/F");
+ 
+
   tree->Branch("sigmoidTime", sigmoidTime, "sigmoidTime[36]/F");
   tree->Branch("linearTime0", linearTime0, "linearTime0[36]/F");
   tree->Branch("linearTime15", linearTime15, "linearTime15[36]/F");
@@ -274,7 +293,8 @@ int main(int argc, char **argv) {
   tree->Branch("tofpet_x", tofpet_x, "tofpet_x[64]/D");
   tree->Branch("tofpet_y", tofpet_y, "tofpet_y[64]/D");
   tree->Branch("tofpet_z", tofpet_z, "tofpet_z[64]/D");
-  tree->Branch("tofpet_t_tofpet", tofpet_t_tofpet, "tofpet_t_tofpet[64]/D");
+  tree->Branch("tofpet_t_tofpet", tofpet_t_tofpet, "tofpet_t_tofpet[64]/l");
+  tree->Branch("tofpet_t_totrigger", tofpet_t_totrigger, "tofpet_t_totrigger[64]/l");
   tree->Branch("tofpet_t_h4daq", &tofpet_t_h4daq, "tofpet_t_h4daq/D");
   tree->Branch("tofpet_xi", tofpet_xi, "tofpet_xi[64]/I");
   tree->Branch("tofpet_yi", tofpet_yi, "tofpet_yi[64]/I");
@@ -332,6 +352,7 @@ int main(int argc, char **argv) {
   rootInputTree_tofpet->SetBranchAddress("yi", tofpet_yi);
   rootInputTree_tofpet->SetBranchAddress("t_h4daq", &tofpet_t_h4daq);
   rootInputTree_tofpet->SetBranchAddress("t_tofpet", tofpet_t_tofpet);
+  rootInputTree_tofpet->SetBranchAddress("t_totrigger", tofpet_t_totrigger);
 
   //// Only for dat data type:
 
@@ -634,6 +655,47 @@ int main(int argc, char **argv) {
     MCPtoClockTime_linearTime30[1] = fs[2];
     MCPtoClockTime_linearTime45[1] = fs[3];
     MCPtoClockTime_linearTime60[1] = fs[4];
+
+    TGraphErrors* pulse_CLOCK2 = new TGraphErrors( GetTGraph( channel[index_CLOCK2], time[realGroup[0]] ) );	
+    index_max_MCP0 = 0;  low_edge_MCP0 = 0.;  high_edge_MCP0 = 0.;  y_MCP0 = 0.;
+    index_min_MCP0 = 0;
+    index_max_MCP0 = FindLeftMax(pulse_CLOCK2, index_MCP0_Min, CLOCK2_CYCLE);
+    index_min_MCP0 = FindLeftMin(pulse_CLOCK2, index_MCP0_Min, CLOCK2_CYCLE);
+    pulse_CLOCK2->GetPoint(index_max_MCP0-4, low_edge_MCP0, y_MCP0); // time of the low edge of the fit range
+    pulse_CLOCK2->GetPoint(index_max_MCP0+4, high_edge_MCP0, y_MCP0);  // time of the upper edge of the fit range 
+ 
+    index_max_MCP1 = 0;  low_edge_MCP1 = 0.;  high_edge_MCP1 = 0.;  y_MCP1 = 0.;
+    index_min_MCP1 = 0; 
+    index_max_MCP1 = FindLeftMax(pulse_CLOCK2, index_MCP1_Min, CLOCK2_CYCLE);
+    index_min_MCP1 = FindLeftMin(pulse_CLOCK2, index_MCP1_Min, CLOCK2_CYCLE);
+    if(abs(index_max_MCP1-index_max_MCP0) < CLOCK2_CYCLE/2) 
+    {
+	index_max_MCP1 += CLOCK2_CYCLE;
+	index_min_MCP1 += CLOCK2_CYCLE;
+    }
+    pulse_CLOCK2->GetPoint(index_max_MCP1-4, low_edge_MCP1, y_MCP1); // time of the low edge of the fit range
+    pulse_CLOCK2->GetPoint(index_max_MCP1+4, high_edge_MCP1, y_MCP1);  // time of the upper edge of the fit range 
+ 
+    pulseName = Form("pulse_event%d_group%d_ch%d", iEvent, 0, index_CLOCK2);
+    
+    MCPtoClock2Time_gauspeak[0] =  GausFit_MeanTime(pulse_CLOCK2, low_edge_MCP0, high_edge_MCP0);
+    MCPtoClock2Time_gauspeak[1] =  GausFit_MeanTime(pulse_CLOCK2, low_edge_MCP1, high_edge_MCP1);
+
+    RisingEdgeFitTimeCLOCK( pulse_CLOCK2, index_max_MCP0, index_min_MCP0, cft_low_range, cft_high_range, fs, risetime_tmp, event, "linearFit_" + pulseName, false, CLOCK2_CYCLE );
+    MCPtoClock2Time_linearTime0[0] = fs[0];
+    MCPtoClock2Time_linearTime15[0] = fs[1];
+    MCPtoClock2Time_linearTime30[0] = fs[2];
+    MCPtoClock2Time_linearTime45[0] = fs[3];
+    MCPtoClock2Time_linearTime60[0] = fs[4];
+
+    RisingEdgeFitTimeCLOCK( pulse_CLOCK2, index_max_MCP1, index_min_MCP0, cft_low_range, cft_high_range, fs, risetime_tmp, event, "linearFit_" + pulseName, false, CLOCK2_CYCLE );
+    MCPtoClock2Time_linearTime0[1] = fs[0];
+    MCPtoClock2Time_linearTime15[1] = fs[1];
+    MCPtoClock2Time_linearTime30[1] = fs[2];
+    MCPtoClock2Time_linearTime45[1] = fs[3];
+    MCPtoClock2Time_linearTime60[1] = fs[4];
+
+
 
 //    if(MCPtoClockTime_gauspeak[0]<10) cout<<"clock reco for MCP 0 failed: "<<event<<endl;
 //    if(MCPtoClockTime_gauspeak[1]<10) cout<<"clock reco for MCP 1 failed: "<<event<<endl;

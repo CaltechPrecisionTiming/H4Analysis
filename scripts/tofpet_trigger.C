@@ -2,7 +2,7 @@
 void tofpet_trigger(const std::string& inFileName, unsigned short int trigger1 = 9999, unsigned short int trigger2 = 9999)
 {
 
-	TH1F *h_next = new TH1F("time_neighbor","time_neighbor",20000,-10000,10000);
+	TH1F *h_next = new TH1F("time_neighbor","time_neighbor",20000,-1e4,1e4);
 
 	gStyle -> SetOptStat(0);
 
@@ -20,6 +20,7 @@ void tofpet_trigger(const std::string& inFileName, unsigned short int trigger1 =
 	for(i=0;i<NEntries;i++)
 	{
 		t->GetEntry(i);
+		if(channelID==20) continue;
 		if(i%10000==0) cout<<"event "<<i<<endl;
 		if(channelID == trigger1 || channelID == trigger2)
 		{
