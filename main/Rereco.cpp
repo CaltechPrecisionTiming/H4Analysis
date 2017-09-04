@@ -229,7 +229,7 @@ int main(int argc, char **argv) {
   int tofpet_yi[64];
   double tofpet_t_h4daq[64];
   long long int tofpet_t_tofpet[64];
-  long long int tofpet_t_totrigger[64];
+  double tofpet_t_totrigger[64];
 
   
   tree->Branch("event", &event, "event/I");
@@ -293,8 +293,8 @@ int main(int argc, char **argv) {
   tree->Branch("tofpet_x", tofpet_x, "tofpet_x[64]/D");
   tree->Branch("tofpet_y", tofpet_y, "tofpet_y[64]/D");
   tree->Branch("tofpet_z", tofpet_z, "tofpet_z[64]/D");
-  tree->Branch("tofpet_t_tofpet", tofpet_t_tofpet, "tofpet_t_tofpet[64]/l");
-  tree->Branch("tofpet_t_totrigger", tofpet_t_totrigger, "tofpet_t_totrigger[64]/l");
+  tree->Branch("tofpet_t_tofpet", tofpet_t_tofpet, "tofpet_t_tofpet[64]/L");
+  tree->Branch("tofpet_t_totrigger", tofpet_t_totrigger, "tofpet_t_totrigger[64]/D");
   tree->Branch("tofpet_t_h4daq", &tofpet_t_h4daq, "tofpet_t_h4daq/D");
   tree->Branch("tofpet_xi", tofpet_xi, "tofpet_xi[64]/I");
   tree->Branch("tofpet_yi", tofpet_yi, "tofpet_yi[64]/I");

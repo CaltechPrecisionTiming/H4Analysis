@@ -25,7 +25,7 @@ void TOFPETRecoTree::Init()
     tree_->Branch("yi", yi, "yi[64]/I");        
     tree_->Branch("spillNum", &spillNum, "spillNum/I");        
     tree_->Branch("t_h4daq", &t_h4daq, "t_h4daq/D");
-    tree_->Branch("t_totrigger", t_totrigger, "t_totrigger[64]/l");
-    tree_->Branch("t_tofpet", t_tofpet, "t_tofpet[64]/l");
+    tree_->Branch("t_totrigger", t_totrigger, "t_totrigger[64]/D");
+    tree_->Branch("t_tofpet", t_tofpet, "t_tofpet[64]/L");
     tree_->Branch("deltaT_h4daq_trigger", &deltaT_h4daq_trigger, "deltaT_h4daq_trigger/D");
 }

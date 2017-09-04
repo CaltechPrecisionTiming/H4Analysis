@@ -37,7 +37,7 @@ public:
     int yi[64];
     int spillNum;
     double t_h4daq;
-    long long int t_totrigger[64];
+    double t_totrigger[64];
     long long int t_tofpet[64];
     double deltaT_h4daq_trigger;
 };

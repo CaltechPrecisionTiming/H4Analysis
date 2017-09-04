@@ -5,7 +5,7 @@
 
 #define TriggerChannelID 0
 
-double matchTriggerWindow = 500; //micro-seconds
+long long int matchTriggerWindow = 1e6; //pico-seconds
 
 //**********Utils*************************************************************************
 //----------Begin-------------------------------------------------------------------------
@@ -269,10 +269,10 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
 
 
     //then, around this trigger, claim that all the events within a given window is matched
-    while(rawTree_->time/1e6 - tofpet_triggertime/1e6 > -1.0*matchTriggerWindow) rawTree_->NextEntry(rawTree_->getCurrentEntry() - 1);
+    while(rawTree_->time - tofpet_triggertime > -1*matchTriggerWindow) rawTree_->NextEntry(rawTree_->getCurrentEntry() - 1);
     rawTree_->NextEntry();
  
-    while(rawTree_->time/1e6 - tofpet_triggertime/1e6 < matchTriggerWindow)
+    while(rawTree_->time - tofpet_triggertime < matchTriggerWindow)
     {
   	if(rawTree_->channelID != TriggerChannelID) matched = true;	
 	if(rawTree_->channelID < MAX_TOFPET_CHANNEL)
@@ -289,6 +289,7 @@ bool TOFPETReco::ProcessEvent(const H4Tree& h4Tree, map<string, PluginBase*>& pl
         	recoTree_.yi[rawTree_->channelID] = rawTree_->yi;
         	recoTree_.t_tofpet[rawTree_->channelID] = rawTree_->time-tofpetRefTime_;
         	recoTree_.t_totrigger[rawTree_->channelID] = rawTree_->time - tofpet_triggertime;
+		//if(rawTree_->channelID!=20) cout<<"matched channelID "<<rawTree_->channelID<<" rawTree_->time "<<rawTree_->time<<"  tofpetRefTime_ "<<tofpetRefTime_<<"  tofpet_triggertime "<<tofpet_triggertime<<" t_tofpet "<<rawTree_->time-tofpetRefTime_<<" = "<<recoTree_.t_tofpet[rawTree_->channelID]<<" t_totrigger "<<rawTree_->time - tofpet_triggertime<<endl;
         }
 	rawTree_->NextEntry();
     } 
