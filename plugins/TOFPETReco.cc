@@ -5,7 +5,7 @@
 
 #define TriggerChannelID 0
 
-long long int matchTriggerWindow = 1e6; //pico-seconds
+long long int matchTriggerWindow = 2e8; //pico-seconds
 
 //**********Utils*************************************************************************
 //----------Begin-------------------------------------------------------------------------

@@ -15,7 +15,7 @@ void tofpet_trigger(const std::string& inFileName, unsigned short int trigger1 =
 	t->SetBranchAddress("time",&time);
 	t->SetBranchAddress("channelID",&channelID);
 	
-	int NEntries = t->GetEntries();
+	iint NEntries = t->GetEntries();
 
 	for(i=0;i<NEntries;i++)
 	{

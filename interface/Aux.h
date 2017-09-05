@@ -27,6 +27,8 @@ void HighPassFilter( short* channel, double* filteredCurrent, float* time, doubl
 void NotchFilter( short* channel, double* filteredCurrent, float* time, double R = -1.0, double C = -1.0, double L = -1.0 );
 int FindLeftMax(TGraphErrors * pulse, int loc, int clockWidth = 25);
 int FindLeftMin(TGraphErrors * pulse, int loc, int clockWidth = 25);
+int FindRightMax(TGraphErrors * pulse, int loc, int clockWidth = 25);
+int FindRightMin(TGraphErrors * pulse, int loc, int clockWidth = 25);
 int FindMin( int n, short *a);
 int DigitalFindMin( int n, short *a);
 int FindRealMin( int n, short *a);

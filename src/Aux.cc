@@ -383,6 +383,59 @@ int FindLeftMin(TGraphErrors * pulse, int loc, int clockWidth )
 	return ind_min;
 }
 
+int FindRightMax(TGraphErrors * pulse, int loc, int clockWidth )
+{
+	int ind_max = 0;
+	double x_max = 0;
+	double y_max = -999999;
+	double x_loc, y_loc;
+	pulse->GetPoint(loc,x_loc,y_loc);
+	for(int ind_this = loc;ind_this<=loc+clockWidth;ind_this++)
+        {
+		double x_right, y_right, x_left, y_left, x_this, y_this;
+		pulse->GetPoint(ind_this+1, x_right, y_right);
+		pulse->GetPoint(ind_this-1, x_left, y_left);
+		pulse->GetPoint(ind_this, x_this, y_this);
+		if(y_this > y_max)
+		{
+			x_max = x_this;
+			ind_max = ind_this;
+			y_max = y_this;
+		}
+		//if(y_this < -100 && x_max < x_loc ) break;
+		
+	}
+	return ind_max;
+}
+
+int FindRightMin(TGraphErrors * pulse, int loc, int clockWidth )
+{
+	int ind_min = 0;
+	double x_min = 0;
+	double y_min = -999999;
+	double x_loc, y_loc;
+	pulse->GetPoint(loc,x_loc,y_loc);
+        int ind_max = FindLeftMax(pulse, loc, clockWidth );
+
+	for(int ind_this = ind_max;ind_this<=ind_max+clockWidth;ind_this++)
+        {
+		double x_right, y_right, x_left, y_left, x_this, y_this;
+		pulse->GetPoint(ind_this+1, x_right, y_right);
+		pulse->GetPoint(ind_this-1, x_left, y_left);
+		pulse->GetPoint(ind_this, x_this, y_this);
+		if(y_this < y_min)
+		{
+			x_min = x_this;
+			ind_min = ind_this;
+			y_min = y_this;
+		}
+		//if(y_this < -100 && x_min < x_loc ) break;
+		
+	}
+	return ind_min;
+}
+
+
 
 
 // find the mean time from gaus fit

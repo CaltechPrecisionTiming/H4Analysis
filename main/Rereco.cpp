@@ -21,8 +21,8 @@ TStyle* style;
 
 int graphic_init();
 
-int index_CLOCK = 6;
-int index_CLOCK2 = 5;
+int index_CLOCK = 5;
+int index_CLOCK2 = 6;
 int index_MCP0 = 7;
 int index_MCP1 = 14;
 
@@ -614,16 +614,16 @@ int main(int argc, char **argv) {
 
     int index_max_MCP0 = 0; Double_t low_edge_MCP0 = 0.; Double_t high_edge_MCP0 = 0.; Double_t y_MCP0 = 0.;
     int index_min_MCP0 = 0;
-    index_max_MCP0 = FindLeftMax(pulse_CLOCK, index_MCP0_Min, CLOCK_CYCLE);
-    index_min_MCP0 = FindLeftMin(pulse_CLOCK, index_MCP0_Min, CLOCK_CYCLE);
+    index_max_MCP0 = FindRightMax(pulse_CLOCK, index_MCP0_Min, CLOCK_CYCLE);
+    index_min_MCP0 = FindLeftMin(pulse_CLOCK, index_max_MCP0, CLOCK_CYCLE);
     pulse_CLOCK->GetPoint(index_max_MCP0-4, low_edge_MCP0, y_MCP0); // time of the low edge of the fit range
     pulse_CLOCK->GetPoint(index_max_MCP0+4, high_edge_MCP0, y_MCP0);  // time of the upper edge of the fit range 
 
  
     int index_max_MCP1 = 0; Double_t low_edge_MCP1 = 0.; Double_t high_edge_MCP1 = 0.; Double_t y_MCP1 = 0.;
     int index_min_MCP1 = 0; 
-    index_max_MCP1 = FindLeftMax(pulse_CLOCK, index_MCP1_Min, CLOCK_CYCLE);
-    index_min_MCP1 = FindLeftMin(pulse_CLOCK, index_MCP1_Min, CLOCK_CYCLE);
+    index_max_MCP1 = FindRightMax(pulse_CLOCK, index_MCP1_Min, CLOCK_CYCLE);
+    index_min_MCP1 = FindLeftMin(pulse_CLOCK, index_max_MCP1, CLOCK_CYCLE);
     if(abs(index_max_MCP1-index_max_MCP0) < CLOCK_CYCLE/2) 
     {
 	index_max_MCP1 += CLOCK_CYCLE;
@@ -659,15 +659,15 @@ int main(int argc, char **argv) {
     TGraphErrors* pulse_CLOCK2 = new TGraphErrors( GetTGraph( channel[index_CLOCK2], time[realGroup[0]] ) );	
     index_max_MCP0 = 0;  low_edge_MCP0 = 0.;  high_edge_MCP0 = 0.;  y_MCP0 = 0.;
     index_min_MCP0 = 0;
-    index_max_MCP0 = FindLeftMax(pulse_CLOCK2, index_MCP0_Min, CLOCK2_CYCLE);
-    index_min_MCP0 = FindLeftMin(pulse_CLOCK2, index_MCP0_Min, CLOCK2_CYCLE);
+    index_max_MCP0 = FindRightMax(pulse_CLOCK2, index_MCP0_Min, CLOCK2_CYCLE);
+    index_min_MCP0 = FindLeftMin(pulse_CLOCK2, index_max_MCP0, CLOCK2_CYCLE);
     pulse_CLOCK2->GetPoint(index_max_MCP0-4, low_edge_MCP0, y_MCP0); // time of the low edge of the fit range
     pulse_CLOCK2->GetPoint(index_max_MCP0+4, high_edge_MCP0, y_MCP0);  // time of the upper edge of the fit range 
  
     index_max_MCP1 = 0;  low_edge_MCP1 = 0.;  high_edge_MCP1 = 0.;  y_MCP1 = 0.;
     index_min_MCP1 = 0; 
-    index_max_MCP1 = FindLeftMax(pulse_CLOCK2, index_MCP1_Min, CLOCK2_CYCLE);
-    index_min_MCP1 = FindLeftMin(pulse_CLOCK2, index_MCP1_Min, CLOCK2_CYCLE);
+    index_max_MCP1 = FindRightMax(pulse_CLOCK2, index_MCP1_Min, CLOCK2_CYCLE);
+    index_min_MCP1 = FindLeftMin(pulse_CLOCK2, index_max_MCP1, CLOCK2_CYCLE);
     if(abs(index_max_MCP1-index_max_MCP0) < CLOCK2_CYCLE/2) 
     {
 	index_max_MCP1 += CLOCK2_CYCLE;

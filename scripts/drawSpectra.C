@@ -5,8 +5,8 @@ void drawSpectra(const std::string& inFileName)
     TFile* inFile = TFile::Open(inFileName.c_str(),"READ");
     TTree* t = (TTree*)( inFile->Get("data") );
     
-    int chIds[]  = { 20, 31, 23, 19, 26, 14, 7,  9, 32, 40, 63, 56, 34, 33, 43, 41 };
-    int colors[] = { 51, 54, 57, 60, 64, 67, 8, 80, 91, 93, 97,  2, 18, 16, 13,  1 };
+    int chIds[]  = { 31, 23, 19, 26, 14, 7,  9, 32, 40, 63, 56, 34, 33, 43, 41 };
+    int colors[] = { 54, 57, 60, 64, 67, 8, 80, 91, 93, 97,  2, 18, 16, 13,  1 };
     std::map<int,TH1F*> histos;
     
     TLegend* legend = new TLegend(0.70,0.40,0.99,0.99);
