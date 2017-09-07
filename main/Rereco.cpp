@@ -24,7 +24,6 @@ int graphic_init();
 int index_CLOCK = 5;
 int index_CLOCK2 = 6;
 int index_MCP0 = 7;
-int index_MCP1 = 14;
 
 int CLOCK_CYCLE = 100; 
 int CLOCK2_CYCLE = 25; 
@@ -387,7 +386,6 @@ int main(int argc, char **argv) {
     } 
     
     int index_MCP0_Min = 0;
-    int index_MCP1_Min = 0;
     //************************************
     //Loop over active groups
     //************************************
@@ -480,7 +478,6 @@ int main(int argc, char **argv) {
 	} else {
 	  index_min = FindMinAbsolute(1024, channel[totalIndex]); 
 	  if (totalIndex == index_MCP0) index_MCP0_Min = index_min;
-	  if (totalIndex == index_MCP1) index_MCP1_Min = index_min;
 	  index_max = FindInverseMaxAbsolute(1024, channel[totalIndex]); 
 	}
 	int index_min_restricted = index_min;
@@ -622,7 +619,7 @@ int main(int argc, char **argv) {
  
     int index_max_MCP1 = 0; Double_t low_edge_MCP1 = 0.; Double_t high_edge_MCP1 = 0.; Double_t y_MCP1 = 0.;
     int index_min_MCP1 = 0; 
-    index_max_MCP1 = FindRightMax(pulse_CLOCK, index_MCP1_Min, CLOCK_CYCLE);
+    index_max_MCP1 = FindRightMax(pulse_CLOCK, index_max_MCP0+int(CLOCK_CYCLE/2), CLOCK_CYCLE);
     index_min_MCP1 = FindLeftMin(pulse_CLOCK, index_max_MCP1, CLOCK_CYCLE);
     if(abs(index_max_MCP1-index_max_MCP0) < CLOCK_CYCLE/2) 
     {
@@ -666,7 +663,7 @@ int main(int argc, char **argv) {
  
     index_max_MCP1 = 0;  low_edge_MCP1 = 0.;  high_edge_MCP1 = 0.;  y_MCP1 = 0.;
     index_min_MCP1 = 0; 
-    index_max_MCP1 = FindRightMax(pulse_CLOCK2, index_MCP1_Min, CLOCK2_CYCLE);
+    index_max_MCP1 = FindRightMax(pulse_CLOCK2, index_max_MCP0+int(CLOCK2_CYCLE/2), CLOCK2_CYCLE);
     index_min_MCP1 = FindLeftMin(pulse_CLOCK2, index_max_MCP1, CLOCK2_CYCLE);
     if(abs(index_max_MCP1-index_max_MCP0) < CLOCK2_CYCLE/2) 
     {

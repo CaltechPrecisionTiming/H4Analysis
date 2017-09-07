@@ -872,11 +872,13 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
     int NSample_t = WFs_[channel]->GetNSample();
     //NSample_t = 1024;//
     //cout << "channel "<<channel<<"  NSample: " << NSample_t << "\n";
+    int this_polarity = -1;
+    if(channel.substr(0,6) =="TOFPET" && WFs_[channel]->GetiSample(2)>-400) this_polarity = 1;
     for(int iSample=0; iSample<1024; iSample++) {
       //t1065Tree_.b_c[ngroup_t][nchannel_t][iSample] = (short)(WFs_[channel]->GetiSample(iSample));
       if(iSample<NSample_t)
 	{
-	  t1065Tree_.raw[outCh][iSample] = (short)(-1*WFs_[channel]->GetiSample(iSample));
+	  t1065Tree_.raw[outCh][iSample] = (short)(this_polarity*WFs_[channel]->GetiSample(iSample));
 	  rawInverted[iSample] = (short)(-1*t1065Tree_.raw[outCh][iSample]);
 	  //cout << "Debug: " << iSample << " : " << WFs_[channel]->GetiSample(iSample) << "\n";
 	}
@@ -909,7 +911,7 @@ bool T1065Reco::ProcessEvent(const H4Tree& event, map<string, PluginBase*>& plug
 
     //our baseline subtraction
     float baseline;
-    if (channel.substr(0,4) == "NINO") {
+    if (channel.substr(0,4) == "NINO" || channel.substr(0,6) =="TOFPET") {
       baseline = DigitalGetBaseline(pulse, 0, 40);
     }
     else if(channel.substr(0,5) == "CLOCK"){
